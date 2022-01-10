@@ -1,0 +1,16 @@
+# Python Cache Files 
+*.pyc
+*__pycache__
+*_cache
+
+# Pyton Build Files and Directory
+*.egg-info
+
+# CI: Testing and coverage
+*.coverage
+
+# Documentation
+/docs/build
+
+# Local IDE Files
+*.vscode
