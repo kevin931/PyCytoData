@@ -1,14 +1,14 @@
 import setuptools
 
-VERSION = "0.0.1"
+VERSION = "0.0.0"
 
 setuptools.setup(
-    name = "PythonTemplate",
+    name = "PyCytoData",
     version = VERSION,
-    description = "A Template for your Python Package",
+    description = "A Python Interface to HDCytoData",
     packages=["PythonTemplate"],
     python_requires=">=3.9",
-    install_requires=[],
+    install_requires=["fcsparser", "pandas", "numpy"],
     test_requires=["pytest",
                    "pytest-cov",
                    "pytest-mock",
