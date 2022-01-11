@@ -6,7 +6,7 @@ setuptools.setup(
     name = "PyCytoData",
     version = VERSION,
     description = "A Python Interface to HDCytoData",
-    packages=["PythonTemplate"],
+    packages=["PyCytoData"],
     python_requires=">=3.9",
     install_requires=["fcsparser", "pandas", "numpy"],
     test_requires=["pytest",
