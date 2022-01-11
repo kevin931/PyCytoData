@@ -3,6 +3,9 @@
 *__pycache__
 *_cache
 
+# Package Data Files
+/PyCytoData/data
+
 # Pyton Build Files and Directory
 *.egg-info
 
