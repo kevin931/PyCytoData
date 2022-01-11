@@ -1,96 +1,88 @@
-# PythonTemplate
-> A template repository for a Python package
+# PyCytoData
+> Interface to HDCytoData for CyTOF Benchmark Datasets
 
-If you're looking for a quick template for your python project, you're at the right palce! This
-is a skeleton project to kickstart (or Press Button Start) your next Python Project on the
-horizon! Simply use the project without worrying about anything else!
+This package downloads and load some popular CyTOF benchmark datasets as published by previous studies. The original concept of such a package is conceived and implemented in R by Weber & Soneson (2019) in [this repository](https://github.com/lmweber/HDCytoData). PyCytoData brings this to Python while also adding our own flavor this incredibly
+useful tool.
 
-For documentation and unittesting, you don't have to use the same framework as I'm using. If
-you don't like it, leave parts of the folder out! No worry: I won't be offendeds!
+## Installation
 
-## Packages You Will Need
+We're currently under development! To install, you can do the following:
 
-You will need some packages to get started! I recommend using a ``conda`` environment, but
-you can use whatever virtual environment framework you want!
-
-### Python
-
-Duh! You will need a relatively modern (I'm talking 3.7 and up) althought the ``setup.py`` specifies
-3.9.
-
-### For Documentation
-
-I use ``sphinx`` and ``readthedocs`` for documentation! You will need to install the following packages:
-
-```
-sphinx
-sphinx-rtd-theme
-sphinx-git
-sphinxcontrib-autoprogram
-sphinx-autodoc-typehints
+```shell
+git clone https://github.com/kevin931/PyCytoData
+cd PyCytoData
+python setup.py deveop
 ```
 
-### For Unit Testing
+This approach will allow you to use the package while developing!
 
-You will need the following packages:
+### A note on cytomulate
 
+Currently, this package depends on [cytomulate](https://github.com/kevin931/cytomulate). Please make sure that the development version of cytomulate is installed as well!
+
+### Other Dependencies
+
+We need the following dependencies:
+
+- fcsparser
+- pandas
+- numpy
+
+## Install and Load Data
+
+You can load the data easily with the following python codes:
+
+```python
+from PyCytoData import DataLoader
+
+exprs = DataLoader.load_data(dataset = "levine13")
 ```
-pytest
-pytest-cov
-pytest-mock
-coverage
+
+The resulting ``exprs`` is a list of numpy arrays: the first consists of column names and the second is the expression matrix itself.
+
+**Note**: The data are downloaded from a server instead of being shipped with this package. Each dataset only needs to be downloaded once, which is automatically managed. 
+
+During the first-time download of the data, a command-line confirmation is needed. To override this, you can do the following: 
+
+```python 
+from PyCytoData import DataLoader
+
+exprs = DataLoader.load_data(dataset = "levine13", force_download = True)
 ```
 
-Technically, only ``pytest`` is strictly necessary if you don't want to use coverage or ``mocker``. 
+
+## Datasets Supported
+
+We only support the following datasets as of now:
+
+| Dataset | Name |
+| --- | --- |
+| Levine-13dim | levine13 |
+
+More datasets will be added in the future to be fully compatible with HDCytoData.
 
 ## Documentation
 
-I use ``sphinx`` for documentation, which is super easy (well, it takes a little bit of time)! A lot of the 
-``rst`` files I added myself, but to get the basic structure, you will need to run:
+We use ``sphinx`` and ``readthedocs`` for documentation! You will need to install the following packages:
 
-```shell
-cd docs
-sphinx-quickstart
-```
-This will set up your directory with the proper files, just like mine, and you can copy some of the ``rst`` there!
-
-### I'm a Newbie, what should I do?
-
-I recommend you look through [this guide](https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html)
-
-### What does documentation look like?
-
-Here is the link to how this [repository's documentation](pythontemplateproject.readthedocs.io)
-
-### How do I build the documentation locally?
-
-Easy! [Look here!](https://pythontemplateproject.readthedocs.io/en/latest/change/build.html)
+- sphinx
+- sphinx-rtd-theme
+- sphinx-git
+- sphinxcontrib-autoprogram
+- sphinx-autodoc-typehints
 
 
-## Unit Tests
+## Unit Testing
 
-[Here is a tutorial](https://pythontemplateproject.readthedocs.io/en/latest/change/build.html) on how to run tests! You may
-also want to look into ``pytest`` for more details!
+You will need the following packages:
 
-## What do I need to change?
+- pytest
+- pytest-cov
+- pytest-mock
+- coverage
 
-You will need to change a number of things! Don't panic. They're easy!
+## References
 
-### Directory and Python
+[Levine J.H., Simonds E.F. Bendall S.C., Davis KL, Amir el-A.D., Tadmor M.D., Litvin O., Fienberg H.G., Jager A., Zunder E.R., Finck R., Gedman A.L., Radtke I., Downing J.R., & Pe'er D., Nolan G.P. "Data-Driven Phenotypic Dissection of AML Reveals Progenitor-like Cells that Correlate with Prognosis." *Cell*. 2015 Jul 2;162(1):184-97. doi: 10.1016/j.cell.2015.05.047.](https://pubmed.ncbi.nlm.nih.gov/26095251/)
 
-- Change the ``PythonTemplate`` directory to your project name!
-- Put in your own package's details in ``setup.py``.
-
-### External Services
-
-- Create a public GitHub Repo
-- Set up documentation at [ReadTheDocs](https://readthedocs.org/) by linking your repository
-- Register and link your GitHub account at CodeCov for coverage statistics
-
-### Documentation
-- Set up the documentation with ``sphinx`` as documented above. 
-- Go through the documentation in the ``docs`` directory and add and change accordingly.
-
-### GitHub Actions
-- Change ``line 27`` in ``.github/workflows/ci.yaml`` to your own package name
-
+[Weber L.M. and Soneson C. (2019). "HDCytoData: Collection of high-dimensional cytometry benchmark datasets in Bioconductor object formats." *F1000Research, 8*:1459, v2.](https://f1000research.com/articles/8-1459)
