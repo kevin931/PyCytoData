@@ -1,5 +1,5 @@
 import pytest
-from PythonTemplate import __main__
+from PyCytoData import __main__
 
 import sys
 from io import StringIO
