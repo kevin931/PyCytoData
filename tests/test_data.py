@@ -258,6 +258,7 @@ class TestDataLoader():
         mocker.patch("PyCytoData.DataLoader._data_path", {"levine13": "./tmp_pytest/data/" + "levine13/",
                                                           "levine32": "./tmp_pytest/data/" + "levine32/",
                                                           "samusik": "./tmp_pytest/data/" + "samusik/"})
+        mocker.patch("PyCytoData.DataLoader._data_status", {dataset: True})
         
         data: CytoData = DataLoader.load_dataset(dataset=dataset)
         assert isinstance(data, CytoData)
@@ -268,7 +269,7 @@ class TestDataLoader():
         
     def test_load_dataset_no_cell_types(self, mocker): 
         os.remove("./tmp_pytest/data/levine13/levine13_cell_types.txt")
-        
+        mocker.patch("PyCytoData.DataLoader._data_status", {"levine13": True})
         mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
         mocker.patch("PyCytoData.DataLoader._data_path", {"levine13": "./tmp_pytest/data/" + "levine13/",
                                                           "levine32": "./tmp_pytest/data/" + "levine32/",
