@@ -202,7 +202,7 @@ class DataLoader():
         if not cls._data_status[dataset]:
             cls._download_data(dataset = dataset, force_download = force_download)
             
-        data: CytoData = FileIO.load_data(cls._data_path[dataset]+dataset+".txt", col_names = True)
+        data: CytoData = FileIO.load_delim(cls._data_path[dataset]+dataset+".txt", col_names = True)
         
         cell_type_path: str = cls._data_path[dataset] + dataset + "_cell_types.txt"
         if os.path.exists(cell_type_path):
@@ -353,12 +353,12 @@ class DataLoader():
 class FileIO():
     
     @staticmethod
-    def load_data(files: Union[List[str], str],
-                  col_names: bool=True,
-                  drop_columns: Optional[Union[int, List[int]]]=None,
-                  delim: str="\t",
-                  dtype = float
-                  ) -> CytoData:
+    def load_delim(files: Union[List[str], str],
+                   col_names: bool=True,
+                   drop_columns: Optional[Union[int, List[int]]]=None,
+                   delim: str="\t",
+                   dtype = float
+                   ) -> CytoData:
         
         if not isinstance(files, str) and not isinstance(files, list):
             raise TypeError("'files' has to be str or a list of str as paths.")

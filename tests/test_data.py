@@ -377,8 +377,8 @@ class TestFileIO():
                 [("./tmp_pytest/file_read_test_csv.txt", ",", True, int),
                  ("./tmp_pytest/file_read_test_tsv.txt", "\t", False, float)]
                 )
-    def test_load_data_filetype(self, path: str, delim: str, col_names: bool, dtype):
-        out_file: CytoData = FileIO.load_data(path, col_names, delim=delim, dtype = dtype)
+    def test_load_delim_filetype(self, path: str, delim: str, col_names: bool, dtype):
+        out_file: CytoData = FileIO.load_delim(path, col_names, delim=delim, dtype = dtype)
         assert isinstance(out_file, CytoData)
         assert out_file.n_cells == 2
         assert out_file.n_features == 3
@@ -394,9 +394,9 @@ class TestFileIO():
     @pytest.mark.parametrize("drop_cols,expected_shape",
             [([0, 1], (2, 1)), (1, (2,2))]
             )      
-    def test_load_data_drop_col(self, drop_cols, expected_shape):
+    def test_load_delim_drop_col(self, drop_cols, expected_shape):
         path: str = "./tmp_pytest/file_read_test_csv.txt"
-        out_file: CytoData = FileIO.load_data(path, True, drop_columns=drop_cols, delim=",", dtype = int)
+        out_file: CytoData = FileIO.load_delim(path, True, drop_columns=drop_cols, delim=",", dtype = int)
         assert out_file.expression_matrix.shape == expected_shape
         
         
