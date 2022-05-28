@@ -7,7 +7,7 @@ class ExpressionMatrixDimensionError(Exception):
         super().__init__()
         
     def __str__(self):
-        return f"The shape {self.shape} is unsupported. Please reshape it to or use a two-dimensional array."
+        return f"The shape {self.shape} is unsupported. Please reshape it and ensure that the number of channels match."
     
 
 class DimensionMismatchError(Exception):

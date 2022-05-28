@@ -17,26 +17,50 @@ from numpy.typing import ArrayLike
 from typing import Optional, List, Dict, Literal, Any, Union
 
 
-class CytoData():
+class PyCytoData():
     
     def __init__(self,
                  expression_matrix: ArrayLike,
-                 features: Optional[ArrayLike]=None,
+                 channels: Optional[ArrayLike]=None,
                  cell_types: Optional[ArrayLike]=None,
-                 sample_index: Optional[ArrayLike]=None):
+                 sample_index: Optional[ArrayLike]=None,
+                 lineage_channels: Optional[ArrayLike]=None):
+        """The CytoData Class for handling CyTOF data.
+
+        This is an all-purpose data class for handling CyTOF data. It is compatible with
+        benchmark datasets downloaded from the ``DataLoader`` class as well as users' own
+        CyTOF datasets. It has wideranging functionalities, include preprecessing, DR,
+        and much more.
+
+        :param expression_matrix: The expression matrix for the CyTOF sample. Rows are cells
+            and columns are channels.
+        :param channels: The name of the channels, defaults to None
+        :param cell_types: The cell types of the cells, defaults to None
+        :param sample_index: The indicies or names to indicate samples of each cell.
+            This allows the combination of multiple samples into one class, defaults to None
+        :param lineage_channels: The names of lineage channels, defaults to None
         
+        :raises exceptions.ExpressionMatrixDimensionError: The expression matrix is not
+            or cannot be cast into a two dimensional array.
+        :raises exceptions.DimensionMismatchError: The number of channel names does not agree
+            with the number of columns of the expression matrix.
+        :raises exceptions.DimensionMismatchError: The number of cell types for all cells does not agree
+            with the number of rows of the expression matrix.
+        :raises exceptions.DimensionMismatchError: The number of sample indices does not agree
+            with the number of rows of the expression matrix.
+        """
         
         self._expression_matrix: np.ndarray = np.array(expression_matrix)
         if len(self._expression_matrix.shape) != 2:
             raise exceptions.ExpressionMatrixDimensionError(shape=self._expression_matrix.shape)
         
         self._n_cells = self._expression_matrix.shape[0]
-        self._n_features = self._expression_matrix.shape[1]
+        self._n_channels = self._expression_matrix.shape[1]
         
-        if features is not None:
-            self._features = np.array(features)
+        if channels is not None:
+            self._channels = np.array(channels)
         else:
-            self._features = np.full(self.n_features, None)
+            self._channels = np.full(self.n_channels, None)
         
         if cell_types is None:
             self._cell_types = np.full(self.n_cells, None)
@@ -51,19 +75,42 @@ class CytoData():
         self._n_samples: int = len(set(self._sample_index))
         self._n_cell_types: int = len(set(self._cell_types))
         
-        if self._features.shape[0] != self.n_features:
-            raise exceptions.DimensionMismatchError(n=self.n_features, var = "features")
+        if self._channels.shape[0] != self.n_channels:
+            raise exceptions.DimensionMismatchError(n=self.n_channels, var = "channels")
         if self._cell_types.shape[0] != self.n_cells:
             raise exceptions.DimensionMismatchError(n=self.n_cells, var = "cell_types")
         if self._sample_index.shape[0] != self.n_cells:
             raise exceptions.DimensionMismatchError(n=self.n_cells, var = "sample_index")
+        
+        self._lineage_channels: Optional[np.ndarray] = lineage_channels if lineage_channels is None else np.array(lineage_channels).flatten()
+        if self._lineage_channels is not None and not np.all(np.isin(self._lineage_channels, self._channels)):
+            raise ValueError("Some lineage channels are not listed in channel names.")
     
     
     def add_sample(self, expression_matrix: ArrayLike, sample_index: ArrayLike, cell_types: Optional[ArrayLike]=None):
+        """Add another CyTOF sample from the same experiment.
+
+        This method allows users to combine samples into existing samples.
+        The data must be in the same shape. Sample indices must be provided
+        so that the class can properly index these samples using names.
+
+        :param expression_matrix: The expression matrix of the new sample.
+        :type expression_matrix: ArrayLike
+        :param sample_index: The sample indicies to name the sample.
+        :type sample_index: ArrayLike
+        :param cell_types: The cell types of each cell, defaults to None
+        :type cell_types: Optional[ArrayLike], optional
+        :raises exceptions.ExpressionMatrixDimensionError: The expression matrix cannot be cast
+        :raises exceptions.DimensionMismatchError: The number of sample indices
+        
+        :raises exceptions.DimensionMismatchError: _description_
+        """
         expression_matrix = np.array(expression_matrix)
         sample_index = np.array(sample_index)
         
         if len(expression_matrix.shape) != 2:
+            raise exceptions.ExpressionMatrixDimensionError(expression_matrix.shape)
+        if expression_matrix.shape[1] != self.n_channels:
             raise exceptions.ExpressionMatrixDimensionError(expression_matrix.shape)
         if sample_index.shape[0] != expression_matrix.shape[0]:
             raise exceptions.DimensionMismatchError(n=expression_matrix.shape[0], var = "sample_index")
@@ -90,7 +137,7 @@ class CytoData():
         if len(expression_matrix.shape) != 2:
             raise exceptions.ExpressionMatrixDimensionError(expression_matrix.shape)
         self.n_cells = expression_matrix.shape[0]
-        self.n_features = expression_matrix.shape[1]
+        self.n_channels = expression_matrix.shape[1]
         self._expression_matrix = expression_matrix
         
   
@@ -123,16 +170,16 @@ class CytoData():
         
         
     @property
-    def features(self):
-        return self._features
+    def channels(self):
+        return self._channels
     
     
-    @features.setter
-    def features(self, features: ArrayLike):
-        features = np.array(features)
-        if features.shape[0] != self.n_features:
-            raise exceptions.DimensionMismatchError(n=self.n_cells, var = "features")
-        self._features = features
+    @channels.setter
+    def channels(self, channels: ArrayLike):
+        channels = np.array(channels)
+        if channels.shape[0] != self.n_channels:
+            raise exceptions.DimensionMismatchError(n=self.n_cells, var = "channels")
+        self._channels = channels
         
         
     @property
@@ -148,15 +195,15 @@ class CytoData():
         
 
     @property
-    def n_features(self):
-        return self._n_features
+    def n_channels(self):
+        return self._n_channels
     
     
-    @n_features.setter
-    def n_features(self, n_features: int):
-        if not isinstance(n_features, int):
-            raise TypeError(f"'n_features' has to be 'int' instead of {type(n_features)}")
-        self._n_features = n_features
+    @n_channels.setter
+    def n_channels(self, n_channels: int):
+        if not isinstance(n_channels, int):
+            raise TypeError(f"'n_channels' has to be 'int' instead of {type(n_channels)}")
+        self._n_channels = n_channels
         
         
     @property
@@ -182,6 +229,16 @@ class CytoData():
             raise TypeError(f"'n_samples' has to be 'int' instead of {type(n_cell_types)}")
         self._n_cell_types = n_cell_types
         
+    @property
+    def lineage_channels(self) -> Optional[np.ndarray]:
+        return self._lineage_channels
+    
+    
+    @lineage_channels.setter
+    def lineage_channels(self, lineage_channels: ArrayLike):
+        self._lineage_channels: Optional[np.ndarray] = lineage_channels if lineage_channels is None else np.array(lineage_channels).flatten()
+        if self._lineage_channels is not None and not np.all(np.isin(self._lineage_channels, self._channels)):
+            raise ValueError("Some lineage channels are not listed in channel names.")
 
 
 class DataLoader():
@@ -197,12 +254,12 @@ class DataLoader():
         _data_status[d] = os.path.exists(_data_path[d])
 
     @classmethod    
-    def load_dataset(cls, dataset: Literal["levine13", "levine32", "samusik"], force_download: bool = False) -> CytoData:
+    def load_dataset(cls, dataset: Literal["levine13", "levine32", "samusik"], force_download: bool = False) -> PyCytoData:
         
         if not cls._data_status[dataset]:
             cls._download_data(dataset = dataset, force_download = force_download)
             
-        data: CytoData = FileIO.load_delim(cls._data_path[dataset]+dataset+".txt", col_names = True)
+        data: PyCytoData = FileIO.load_delim(cls._data_path[dataset]+dataset+".txt", col_names = True)
         
         cell_type_path: str = cls._data_path[dataset] + dataset + "_cell_types.txt"
         if os.path.exists(cell_type_path):
@@ -247,19 +304,19 @@ class DataLoader():
             print("Here")
             zip_file.extractall(cls._data_path[dataset])
         
-        data: CytoData = cls._preprocess(dataset)
+        data: PyCytoData = cls._preprocess(dataset)
         path: str = cls._data_path[dataset] + dataset + ".txt"
         cell_types: np.ndarray = data.cell_types.reshape(data.n_cells, 1)
         sample_index: np.ndarray = data.sample_index.reshape(data.n_cells, 1)
         meta_data: np.ndarray = np.concatenate((cell_types, sample_index), axis=1)
         metadata_path: str = cls._data_path[dataset] + dataset + "_metadata.txt"
-        FileIO.save_np_array(data.expression_matrix, path, col_names = data.features)
+        FileIO.save_np_array(data.expression_matrix, path, col_names = data.channels)
         FileIO.save_np_array(meta_data, metadata_path, dtype="%s")
         return 0
     
     
     @classmethod
-    def _preprocess(cls, dataset: Literal["levine13", "levine32", "samusik"]) -> CytoData:
+    def _preprocess(cls, dataset: Literal["levine13", "levine32", "samusik"]) -> PyCytoData:
         
         fcss: List[str] = glob.glob(cls._data_path[dataset] + "*.fcs")
         exprs: pd.DataFrame = pd.DataFrame()
@@ -273,33 +330,33 @@ class DataLoader():
             exprs = exprs.append(temp)
         
         if dataset == "levine13":
-            data: CytoData = cls._preprocess_levine13(fcss, exprs, meta, sample_length)
+            data: PyCytoData = cls._preprocess_levine13(fcss, exprs, meta, sample_length)
         elif dataset == "levine32":
-            data: CytoData = cls._preprocess_levine32(fcss, exprs, meta, sample_length)
+            data: PyCytoData = cls._preprocess_levine32(fcss, exprs, sample_length)
         elif dataset == "samusik":
-            data: CytoData = cls._preprocess_samusik(fcss, exprs, meta, sample_length)
+            data: PyCytoData = cls._preprocess_samusik(fcss, exprs, sample_length)
         
         return data
     
     
     @classmethod
-    def _preprocess_levine13(cls, fcss: List[str], exprs: pd.DataFrame, meta: Dict[str, Any], sample_length: List[int]) -> CytoData:
+    def _preprocess_levine13(cls, fcss: List[str], exprs: pd.DataFrame, meta: Dict[str, Any], sample_length: List[int]) -> PyCytoData:
         expression_matrix: np.ndarray = exprs.to_numpy() 
         # Cell Types
         fcs_cell_types: List[str] = [types.split("_")[-2] for types in fcss]
         cell_types: np.ndarray = np.array([])
         for s in range(len(sample_length)):
             cell_types = np.concatenate((cell_types, np.repeat(fcs_cell_types[s], sample_length[s])))
-        # Features
+        # channels
         colnames: np.ndarray = meta['_channels_']["$PnN"].to_numpy()
         # Construct data
-        data: CytoData = CytoData(expression_matrix, colnames, cell_types)
+        data: PyCytoData = PyCytoData(expression_matrix, colnames, cell_types)
         
         return data
     
     
     @classmethod
-    def _preprocess_levine32(cls, fcss: List[str], exprs: pd.DataFrame, meta: Dict[str, Any], sample_length: List[int]) -> CytoData:
+    def _preprocess_levine32(cls, fcss: List[str], exprs: pd.DataFrame, sample_length: List[int]) -> PyCytoData:
         colnames: np.ndarray = np.array(exprs.columns)
         expression_matrix: np.ndarray = exprs.to_numpy()
         # Cell Types and Sample Index
@@ -311,13 +368,13 @@ class DataLoader():
             cell_types = np.concatenate((cell_types, np.repeat(fcs_cell_types[s], sample_length[s])))
             sample_index = np.concatenate((sample_index, np.repeat(sample_names[s], sample_length[s])))
         # Construct data
-        data: CytoData = CytoData(expression_matrix, colnames, cell_types, sample_index)
+        data: PyCytoData = PyCytoData(expression_matrix, colnames, cell_types, sample_index)
         
         return data
     
     
     @classmethod
-    def _preprocess_samusik(cls, fcss: List[str], exprs: pd.DataFrame, meta: Dict[str, Any], sample_length: List[int]) -> CytoData:
+    def _preprocess_samusik(cls, fcss: List[str], exprs: pd.DataFrame, sample_length: List[int]) -> PyCytoData:
         colnames: np.ndarray = np.array(exprs.columns)
         expression_matrix: np.ndarray = exprs.to_numpy()
         # Sample Index
@@ -345,7 +402,7 @@ class DataLoader():
             counter += s
         
         # Construct data
-        data: CytoData = CytoData(expression_matrix, colnames, cell_types, sample_index)
+        data: PyCytoData = PyCytoData(expression_matrix, colnames, cell_types, sample_index)
         
         return data
 
@@ -358,7 +415,20 @@ class FileIO():
                    drop_columns: Optional[Union[int, List[int]]]=None,
                    delim: str="\t",
                    dtype = float
-                   ) -> CytoData:
+                   ) -> PyCytoData:
+        
+        """Load a deliminited text file as a PyCytoData object.
+
+        This method loads a deliminited file and returns a PyCytoData object. The file
+        has to be a standard text file containing the expression matrix. Rows are cells
+        and columns are channel names. If ``col_names`` is ``True``, the first row of
+        the file will be treated as channel names. If multiple file paths are present,
+        they will be automatically concatenated into one object, but the sample
+        indices will be recorded.
+
+        :raises TypeError: The ``files`` is neither a string nor a list of strings.
+        :return: A PyCytoData object.
+        """
         
         if not isinstance(files, str) and not isinstance(files, list):
             raise TypeError("'files' has to be str or a list of str as paths.")
@@ -367,7 +437,7 @@ class FileIO():
         
         skiprows: int = 1 if col_names else 0
         colnames: Optional[np.ndarray] = None
-        data: Optional[CytoData] = None
+        data: Optional[PyCytoData] = None
         
         for i, file in enumerate(files):                            
             # Load Data
@@ -376,7 +446,7 @@ class FileIO():
             if drop_columns is not None:
                 f = np.delete(f, drop_columns, axis=1)
             if i==0:
-                data = CytoData(expression_matrix=f, sample_index=sample_index)
+                data = PyCytoData(expression_matrix=f, sample_index=sample_index)
             else:
                 assert data is not None
                 data.add_sample(expression_matrix=f, sample_index=sample_index)
@@ -389,11 +459,11 @@ class FileIO():
                         colnames = np.delete(colnames, drop_columns)
                     skiprows = 1
                 else:
-                    colnames = np.full(data.n_features, None)
+                    colnames = np.full(data.n_channels, None)
         
         assert data is not None
         assert colnames is not None
-        data.features = colnames
+        data.channels = colnames
         
         return data
     

@@ -38,7 +38,7 @@ exprs.sample_index # Sample index
 exprs.features # The feature/marker names
 ```
 
-The resulting ``exprs`` is a ``CytoData`` object, which is easy to use. The expression matrix, cell types (if available), and sample index are directly accessible with attributes, and they are all stored as **numpy.array**. You can also access some metadata of the object with the following attributes:
+The resulting ``exprs`` is a ``PyCytoData`` object, which is easy to use. The expression matrix, cell types (if available), and sample index are directly accessible with attributes, and they are all stored as **numpy.array**. You can also access some metadata of the object with the following attributes:
 
 ```python
 exprs.n_cells
@@ -63,7 +63,7 @@ exprs = DataLoader.load_dataset(dataset = "levine13", force_download = True)
 
 ## Bring Your Own Dataset (BYOD)
 
-Yes, you read it right! You can load your own datasets. Currently, we only support reading in plain text files with saved with delimiters. The data need to have cells as rows and features as columns. To do load them in as a ``CytoData`` object, you can simply do the following:
+Yes, you read it right! You can load your own datasets. Currently, we only support reading in plain text files with saved with delimiters. The data need to have cells as rows and features as columns. To do load them in as a ``PyCytoData`` object, you can simply do the following:
 
 ```python
 from PyCytoData import FileIO

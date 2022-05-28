@@ -180,7 +180,7 @@ def bead_normalization(data: ArrayLike, channels: ArrayLike, bead_channels: Arra
     :param channels: The channel names of the expression matrix in the order of the columns
     :param bead_channels: The bead channels as specify by name
     :param time_channel: The time channels as specify by name
-    :param transform_quantile: The transform channels to apply the normalization as specify by name
+    :param transform_channels: The transform channels to apply the normalization as specify by name
     
     :return: The normalized expression matrix.
     
