@@ -1,4 +1,4 @@
-from PyCytoData import FileIO, CytoData, DataLoader, exceptions
+from PyCytoData import FileIO, PyCytoData, DataLoader, exceptions
 import numpy as np
 import pandas as pd
 
@@ -18,27 +18,30 @@ class TestCytoData():
     @classmethod
     def setup_class(cls):
         expression_matrix: np.ndarray = np.array([[1.1, 2.2, 3.3], [4.4, 5.5, 6.6]])
-        features: np.ndarray = np.array(["feature1", "feature2", "feature3"])
+        channels: np.ndarray = np.array(["feature1", "feature2", "feature3"])
         cell_types: np.ndarray = np.array(["TypeA", "TypeB"])
         sample_index: np.ndarray = np.array(["SampleA", "SampleA"])
-        cls.dataset = CytoData(expression_matrix=expression_matrix, cell_types=cell_types, features=features, sample_index=sample_index)
+        lineage_channels: np.ndarray = np.array(["feature1", "feature2"])
+        cls.dataset = PyCytoData(expression_matrix=expression_matrix, cell_types=cell_types, channels=channels,
+                                 sample_index=sample_index, lineage_channels=lineage_channels)
         
         
     @pytest.mark.parametrize("attr,expected",
             [("expression_matrix", np.ndarray),
-             ("features", np.ndarray),
+             ("channels", np.ndarray),
              ("cell_types", np.ndarray),
              ("sample_index", np.ndarray),
-             ("n_features", int),
+             ("n_channels", int),
              ("n_cells", int),
              ("n_samples", int),
-             ("n_cell_types", int)])
+             ("n_cell_types", int),
+             ("lineage_channels", np.ndarray)])
     def test_attributes_type(self, attr: str, expected: Any):
         assert isinstance(getattr(self.dataset, attr), expected)
         
         
     @pytest.mark.parametrize("attr,expected",
-            [("n_features", 3),
+            [("n_channels", 3),
              ("n_cells", 2),
              ("n_samples", 1),
              ("n_cell_types", 2)])
@@ -48,9 +51,10 @@ class TestCytoData():
     
     @pytest.mark.parametrize("attr,expected",
         [("expression_matrix", np.array([[1.1, 2.2, 3.3], [4.4, 5.5, 6.6]])),
-         ("features", np.array(["feature1", "feature2", "feature3"])),
+         ("channels", np.array(["feature1", "feature2", "feature3"])),
          ("cell_types", np.array(["TypeA", "TypeB"])),
-         ("sample_index", np.array(["SampleA", "SampleA"]))])
+         ("sample_index", np.array(["SampleA", "SampleA"])),
+         ("lineage_channels", np.array(["feature1", "feature2"]))])
     def test_array_attributes_values(self, attr: str, expected: Any):
         assert np.all(getattr(self.dataset, attr) == expected)
         
@@ -96,8 +100,7 @@ class TestCytoData():
         try:
             self.dataset.add_sample(expression_matrix=new_sample, sample_index=sample_index)
         except exceptions.ExpressionMatrixDimensionError as e:
-            message = str(e)
-            assert "The shape (3,) is unsupported. Please reshape it to or use a two-dimensional array." in message
+            assert "The shape (3,) is unsupported. Please reshape it and ensure that the number of channels match." in str(e)
             
             
     def test_add_sample_no_cell_types(self):
@@ -110,43 +113,54 @@ class TestCytoData():
     def test_setters(self):
         expression_matrix = np.array([[1.2, 2.3, 3.4, 4.5], [4.5, 5.6, 6.7, 7.8]])
         self.dataset.expression_matrix = expression_matrix
+        self.dataset.channels = np.array(["feature1", "feature2", "feature3", "feature4"])
         self.dataset.sample_index = np.array(["SampleA", "SampleB"])
         self.dataset.cell_types = np.array(["TypeA", "TypeB"])
+        self.dataset.lineage_channels = np.array(["feature3", "feature4"])
         assert self.dataset.n_cells == 2
-        assert self.dataset.n_features == 4
+        assert self.dataset.n_channels == 4
         assert self.dataset.n_samples == 2
         assert self.dataset.n_cell_types == 2
+        assert np.all(np.isin(np.array(["feature1", "feature2", "feature3", "feature4"]), self.dataset.channels))
+        assert np.all(np.isin(np.array(["feature3", "feature4"]), self.dataset.lineage_channels))
         
         
     def test_setters_n_values(self):
         self.dataset.n_cells = 2
-        self.dataset.n_features = 4
+        self.dataset.n_channels = 4
         self.dataset.n_samples = 2
         self.dataset.n_cell_types = 2
         assert self.dataset.n_cells == 2
-        assert self.dataset.n_features == 4
+        assert self.dataset.n_channels == 4
         assert self.dataset.n_samples == 2
         assert self.dataset.n_cell_types == 2
     
     
     @pytest.mark.parametrize("attr",
-        ["n_features","n_cells","n_samples"])
+        ["n_channels","n_cells","n_samples"])
     def test_setter_type_error(self, attr: str):
         try:
             setattr(self.dataset, attr, "test")
         except TypeError as e:
-            f"'{attr}' has to be 'int' instead of str" in str(e)
+            assert f"'{attr}' has to be 'int'" in str(e)
         
         
     @pytest.mark.parametrize("attr,input_array,length",
         [("sample_index", np.array(["a", "a", "a"]), 2),
          ("cell_types", np.array(["a", "a", "a"]), 2),
-         ("features", np.array(["a", "a", "a"]), 4)])
+         ("channels", np.array(["a", "a", "a"]), 2)])
     def test_setter_dimension_mismatch_error(self, attr: str, input_array: np.ndarray, length: int):
         try:
             setattr(self.dataset, attr, input_array)
         except exceptions.DimensionMismatchError as e:
-            f"The `{attr}` attribute has to be of length {length}."
+            assert f"The `{attr}` attribute has to be of length {length}." in str(e)
+            
+            
+    def test_lineage_channel_setter_error(self):
+        try:
+            self.dataset.lineage_channels = np.array(["feature4"])
+        except ValueError as e:
+            assert "Some lineage channels are not listed in channel names." in str(e)
     
     
     @classmethod
@@ -189,12 +203,11 @@ class TestDataLoader():
                                             "FeatureB": [4.4, 5.5, 6.6]})
         fcss: List[str] = ["a-a-a-AML08-a_a_a_TypeA_a.fcs", "a-a-a-AML09-a_a_a_TypeB_a.fcs"]
         sample_length: List[int] = [2, 1]
-        meta: Dict[str, Any] = {}
         
-        data: CytoData = DataLoader._preprocess_levine32(fcss, exprs,meta, sample_length)
-        assert isinstance(data, CytoData)
+        data: PyCytoData = DataLoader._preprocess_levine32(fcss, exprs, sample_length)
+        assert isinstance(data, PyCytoData)
         assert data.n_cells == 3
-        assert data.n_features == 2
+        assert data.n_channels == 2
         assert data.n_samples == 2
 
 
@@ -205,10 +218,10 @@ class TestDataLoader():
         sample_length: List[int] = [2, 1]
         meta: Dict[str, Any] = {"_channels_": {"$PnN": pd.Series(["FeatureA", "FeatureB"])}}
         
-        data: CytoData = DataLoader._preprocess_levine13(fcss, exprs,meta, sample_length)
-        assert isinstance(data, CytoData)
+        data: PyCytoData = DataLoader._preprocess_levine13(fcss, exprs,meta, sample_length)
+        assert isinstance(data, PyCytoData)
         assert data.n_cells == 3
-        assert data.n_features == 2
+        assert data.n_channels == 2
         assert data.n_samples == 1
         
         
@@ -217,17 +230,16 @@ class TestDataLoader():
                                             "FeatureB": [4.4, 5.5, 6.6]})
         fcss: List[str] = ["a_a_a_01_a.fcs", "a_a_a_02_a.fcs"]
         sample_length: List[int] = [2, 1]
-        meta: Dict[str, Any] = {}
         
         mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
         mocker.patch("PyCytoData.DataLoader._data_path", {"levine13": "./tmp_pytest/data/" + "levine13/",
                                                           "levine32": "./tmp_pytest/data/" + "levine32/",
                                                           "samusik": "./tmp_pytest/data/" + "samusik/"})
         
-        data: CytoData = DataLoader._preprocess_samusik(fcss, exprs,meta, sample_length)
-        assert isinstance(data, CytoData)
+        data: PyCytoData = DataLoader._preprocess_samusik(fcss, exprs, sample_length)
+        assert isinstance(data, PyCytoData)
         assert data.n_cells == 3
-        assert data.n_features == 2
+        assert data.n_channels == 2
         assert data.n_samples == 2
         
     
@@ -260,11 +272,11 @@ class TestDataLoader():
                                                           "samusik": "./tmp_pytest/data/" + "samusik/"})
         mocker.patch("PyCytoData.DataLoader._data_status", {dataset: True})
         
-        data: CytoData = DataLoader.load_dataset(dataset=dataset)
-        assert isinstance(data, CytoData)
+        data: PyCytoData = DataLoader.load_dataset(dataset=dataset)
+        assert isinstance(data, PyCytoData)
         assert None not in data.cell_types
         assert data.n_cells == 2
-        assert data.n_features == 3
+        assert data.n_channels == 3
        
         
     def test_load_dataset_no_cell_types(self, mocker): 
@@ -275,11 +287,11 @@ class TestDataLoader():
                                                           "levine32": "./tmp_pytest/data/" + "levine32/",
                                                           "samusik": "./tmp_pytest/data/" + "samusik/"})
         
-        data: CytoData = DataLoader.load_dataset(dataset="levine13")
-        assert isinstance(data, CytoData)
+        data: PyCytoData = DataLoader.load_dataset(dataset="levine13")
+        assert isinstance(data, PyCytoData)
         assert None in data.cell_types
         assert data.n_cells == 2
-        assert data.n_features == 3
+        assert data.n_channels == 3
         
     
     @pytest.mark.parametrize("force_download",
@@ -294,11 +306,11 @@ class TestDataLoader():
         mock_download: mocker.MagicMock = mocker.MagicMock()
         mocker.patch("PyCytoData.DataLoader._download_data", mock_download)
         
-        data: CytoData = DataLoader.load_dataset(dataset="levine13", force_download=force_download)
-        assert isinstance(data, CytoData)
+        data: PyCytoData = DataLoader.load_dataset(dataset="levine13", force_download=force_download)
+        assert isinstance(data, PyCytoData)
         assert None in data.cell_types
         assert data.n_cells == 2
-        assert data.n_features == 3
+        assert data.n_channels == 3
         mock_download.assert_called_with(dataset="levine13", force_download=force_download)
 
             
@@ -337,7 +349,7 @@ class TestDataLoader():
         mocker.patch("PyCytoData.data.ZipFile", return_value = zip_mock)
         mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
         expression_matrix: np.ndarray = np.array([[1, 2],[2, 3]])
-        data_mock: CytoData = CytoData(expression_matrix)
+        data_mock: PyCytoData = PyCytoData(expression_matrix)
         mocker.patch("PyCytoData.DataLoader._preprocess", return_value=data_mock)
         save_array_mock: mocker.MagicMock = mocker.MagicMock()
         mocker.patch("PyCytoData.FileIO.save_np_array", save_array_mock)
@@ -378,16 +390,16 @@ class TestFileIO():
                  ("./tmp_pytest/file_read_test_tsv.txt", "\t", False, float)]
                 )
     def test_load_delim_filetype(self, path: str, delim: str, col_names: bool, dtype):
-        out_file: CytoData = FileIO.load_delim(path, col_names, delim=delim, dtype = dtype)
-        assert isinstance(out_file, CytoData)
+        out_file: PyCytoData = FileIO.load_delim(path, col_names, delim=delim, dtype = dtype)
+        assert isinstance(out_file, PyCytoData)
         assert out_file.n_cells == 2
-        assert out_file.n_features == 3
+        assert out_file.n_channels == 3
         
         if path == "./tmp_pytest/file_read_test_csv.txt":
-            assert "col1" in out_file.features
+            assert "col1" in out_file.channels
             assert out_file.expression_matrix.dtype == np.dtype("int64")
         else:
-            assert None in out_file.features
+            assert None in out_file.channels
             assert out_file.expression_matrix.dtype == np.dtype("float64")
             
     
@@ -396,7 +408,7 @@ class TestFileIO():
             )      
     def test_load_delim_drop_col(self, drop_cols, expected_shape):
         path: str = "./tmp_pytest/file_read_test_csv.txt"
-        out_file: CytoData = FileIO.load_delim(path, True, drop_columns=drop_cols, delim=",", dtype = int)
+        out_file: PyCytoData = FileIO.load_delim(path, True, drop_columns=drop_cols, delim=",", dtype = int)
         assert out_file.expression_matrix.shape == expected_shape
         
         

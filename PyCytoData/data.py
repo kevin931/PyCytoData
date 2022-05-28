@@ -327,7 +327,7 @@ class DataLoader():
         for fcs in fcss:
             meta, temp = fcsparser.parse(fcs, reformat_meta=True)
             sample_length.append(len(temp))
-            exprs = exprs.append(temp)
+            exprs = pd.concat([exprs, temp])
         
         if dataset == "levine13":
             data: PyCytoData = cls._preprocess_levine13(fcss, exprs, meta, sample_length)
