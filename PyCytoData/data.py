@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from PyCytoData import exceptions
+from PyCytoData import exceptions, preprocess
 
 from zipfile import ZipFile
 from urllib.request import urlopen
@@ -12,9 +12,16 @@ import csv
 import os
 import pkg_resources
 import glob
+import re
+from copy import deepcopy
 
 from numpy.typing import ArrayLike
 from typing import Optional, List, Dict, Literal, Any, Union
+
+
+def _verbose(message: str, verbose:bool=True):
+    if verbose:
+        print(message)
 
 
 class PyCytoData():
@@ -124,6 +131,130 @@ class PyCytoData():
             self.cell_types = np.concatenate((self.cell_types, np.full(expression_matrix.shape[0], None)))
         else:
             self.cell_types = np.concatenate((self.cell_types, np.array(cell_types)))
+         
+         
+    def preprocess(self,
+                   arcsinh: bool=True,
+                   gate_debris_removal: bool=True,
+                   gate_intact_cells: bool=True,
+                   gate_live_cells: bool=True,
+                   gate_center_offset_residual: bool = True,
+                   bead_normalization: bool=True,
+                   auto_channels: bool=True,
+                   bead_channels: Optional[ArrayLike]=None,
+                   time_channel: Optional[ArrayLike]=None,
+                   cor_channels: Optional[ArrayLike]=None,
+                   dead_channel: Optional[ArrayLike]=None,
+                   DNA_channels: Optional[ArrayLike]=None,
+                   cofactor: int=2,
+                   cutoff_DNA_sd: float=2,
+                   dead_cutoff_quantile: float=0.03,
+                   cor_cutoff_quantile: float=0.03,
+                   verbose: bool=True):
+        """Preprocess the expression matrix.
+
+        This is a one-size-fits-all method to preprocess the CyTOF sample using the ``preprocess``
+        module. The preprocessing consists of the following steps:
+        
+        1. Arcsinh transformation. 
+        2. Gate to remove debris.
+        3. Gate for intact cells.
+        4. Gate for live cells.
+        5. Gate for anomalies using center, offset, and residual channels. 
+
+        :param data: The expression matrix array of two dimensions.
+        :param gate_debris removal: Whether to gate to remove debris, defaults to True.
+        :param gate_intact_cells: Whether to gate for intact cells, defaults to True.
+        :param gate_live_cells: Whether to gate for live cells, defaults to True.
+        :param gate_center_offset_residual: Whether to gate using center, offset, and residual channels, defaults to True.
+        :param bead_normalizations: Whether to perform bead normalization, defaults to True.
+        :param auto_channels: Allow the method to recognize instrument and other non-lineage channels automatically.
+            This can be overwritten by specifying channels in ``bead_channels``, ``time_channel``, ``cor_channels``,
+            ``dead_channel``, and ``DNA_channels``, defaults to True.
+        :param bead_channels: The bead channels as specify by name, defaults to None
+        :param time_channel:The time channel as specify by name, defaults to None
+        :param cor_channels: The Center, Offset, and Residual channels as specify by name, defaults to None
+        :param dead_channels: The dead channels as specify by name, defaults to None
+        :param DNA_channels: The DNA channels as specify by name, defaults to None
+        :param cutoff_DNA_channels: The standard deviation cutoff for DNA channels. Here, we
+            specifically measure how many standard deviations away from the mean, defaults to 2
+        :param dead_cutoff_quantile: The cutoff quantiles for dead channels. The top specified quantile
+            will be excluded, defaults to 0.03
+        :param cor_cutoff_quantile: The cutoff quantiles for Center, Offset, and Residual channels. Both the top
+            and bottom specified quantiles will be excluded, defaults to 0.03
+
+        :return: The gated expression matrix.
+        """
+        
+        expression_processed: np.ndarray = deepcopy(self.expression_matrix)
+        indices: np.ndarray = np.arange(0, self.n_cells)
+
+        channels = self.channels.tolist()
+        if auto_channels:
+            auto_channel_error: List[str] = []
+            if bead_channels is None and (gate_debris_removal or bead_normalization):
+                bead_channels = list(filter(lambda channel: re.match("^bead", channel, re.IGNORECASE), channels)) #type: ignore
+                if len(bead_channels) == 0: auto_channel_error.append("bead_channels")
+            if DNA_channels is None and gate_intact_cells:
+                DNA_channels = list(filter(lambda channel: re.match("dna", channel, re.IGNORECASE), channels)) #type: ignore
+                if len(DNA_channels) == 0: auto_channel_error.append("DNA_channels")
+            if dead_channel is None and gate_live_cells:
+                dead_channel = list(filter(lambda channel: re.match("dead", channel, re.IGNORECASE), channels)) #type: ignore
+                if len(dead_channel) == 0: auto_channel_error.append("dead_channel")
+            if time_channel is None and bead_normalization:
+                time_channel = list(filter(lambda channel: re.match("time", channel, re.IGNORECASE), channels)) #type: ignore
+                if len(time_channel) == 0: auto_channel_error.append("time_channel")
+            if cor_channels is None and gate_center_offset_residual:
+                cor_channels = list(filter(lambda channel: re.match("residual", channel, re.IGNORECASE), channels)) #type: ignore
+                cor_channels.append(list(filter(lambda channel: re.match("center", channel, re.IGNORECASE), channels))) #type: ignore
+                cor_channels.append(list(filter(lambda channel: re.match("offset", channel, re.IGNORECASE), channels))) #type: ignore
+                if len(cor_channels) == 0: auto_channel_error.append("cor_channels")
+                
+            if len(auto_channel_error) > 0:
+                raise exceptions.AutoChannelError(auto_channel_error)
+            
+        indices_temp: np.ndarray
+        
+        if arcsinh:
+            _verbose("Runinng Arcsinh transformation...", verbose=verbose)
+            expression_processed = preprocess.arcsinh(expression_processed, self.channels, transform_channels=self.lineage_channels, cofactor=cofactor)
+        
+        if gate_debris_removal:
+            _verbose("Runinng debris remvoal...", verbose=verbose)
+            assert bead_channels is not None
+            expression_processed, indices_temp = preprocess.gate_debris_removal(expression_processed, self.channels, bead_channels)
+            indices = indices[indices_temp]
+        
+        if gate_intact_cells:
+            _verbose("Runinng gating intact cells...", verbose=verbose)
+            assert DNA_channels is not None
+            expression_processed, indices_temp = preprocess.gate_intact_cells(expression_processed, self.channels, DNA_channels, cutoff_DNA_sd)
+            indices = indices[indices_temp]
+            
+        if gate_live_cells:
+            _verbose("Runinng gating live cells...", verbose=verbose)
+            assert dead_channel is not None
+            expression_processed, indices_temp = preprocess.gate_live_cells(expression_processed, self.channels, dead_channel, dead_cutoff_quantile)
+            indices = indices[indices_temp]
+            
+        if gate_center_offset_residual:
+            _verbose("Runinng gating Center, Offset, and Residual...", verbose=verbose)
+            assert cor_channels is not None
+            expression_processed, indices_temp = preprocess.gate_center_offset_residual(expression_processed, self.channels, cor_channels, cor_cutoff_quantile)
+            indices = indices[indices_temp]
+            
+        if bead_normalization:
+            _verbose("Runinng bead normalization...", verbose=verbose)
+            assert bead_channels is not None
+            assert time_channel is not None
+            assert self.lineage_channels is not None
+            expression_processed, indices_temp = preprocess.bead_normalization(expression_processed, self.channels, bead_channels, time_channel, self.lineage_channels)
+            indices = indices[indices_temp]
+        
+        self.expression_matrix = expression_processed
+        if gate_debris_removal or gate_intact_cells or gate_live_cells or gate_center_offset_residual or bead_normalization:
+            self.cell_types = self.cell_types[indices]
+            self.sample_index = self.sample_index[indices]
          
          
     @property
