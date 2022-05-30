@@ -1,8 +1,7 @@
 # PyCytoData
-> Interface to HDCytoData for CyTOF Benchmark Datasets
+> An elegant data analysis tool for CyTOF.
 
-This package downloads and load some popular CyTOF benchmark datasets as published by previous studies. The original concept of such a package is conceived and implemented in R by Weber & Soneson (2019) in [this repository](https://github.com/lmweber/HDCytoData). PyCytoData brings this to Python while also adding our own flavor this incredibly
-useful tool.
+This package is an all-in-one CyTOF data analysis package for your experiments. From loading datasets to DR and evaluation, you have a consistent interface and readable code every step along the way. There is also support for some of ``HDCytoData``'s benchmark datasets as originally implemented in R by Weber & Soneson (2019) in [this repository](https://github.com/lmweber/HDCytoData). Why wait? Start your PyCytoData journal right here, right now! 
 
 ## Installation
 
@@ -90,6 +89,48 @@ In this case, the expression matrices are concatenated automatically without any
 
 **Note:** This technique does not automatically load cell types. In fact, it does **not** not mixed-datatype array, except for column names. You will need to read in cell types and set them using the ``cell_types`` attribute of the object. 
 
+## Preprocessing
+
+Currently, ``levine13``, ``levine32``, and ``samusik`` have all been mostly preprocessed. All you need to do is to perform ``aecsinh`` transformaion. You can simply do this:
+
+```python
+from PyCytoData import DataLoader
+
+exprs = DataLoader.load_dataset(dataset = "levine13")
+exprs.preprocess(arcsinh=True)
+```
+
+When you perform BYOD, you can have much more flexibility:
+
+```python
+from PyCytoData import FileIO
+
+byod = FileIO.load_delim(files="/path", # Path to file
+                         col_names=True, # Whether the first row is feature (column) names 
+                         delim="\t" # Delimiter
+                        )
+byod.lineage_channels = ["CD4", "CD8", "FoxP3", "CD15"]
+byod.preprocess(arcsinh=True,
+                gate_debris_removal=True,
+                gate_intact_cells=True,
+                gate_live_cells=True,
+                gate_center_offset_residual=True,
+                bead_normalization=True)
+
+byod.expression_matrix # This is preprocessed
+```
+As the example shows, we support five unique preprocessing steps! And of course, you can use a subset of these to suit your own needs! By default, we automatically detect the necessary channels, such as "Bead1" or "Center". However, if your dataset is unconventionally named, our auto-detect algorithm may fail. Thus, we can perform a manual override:
+
+```python
+byod.preprocess(arcsinh=True,
+                gate_debris_removal=True,
+                gate_intact_cells=True,
+                gate_live_cells=True,
+                gate_center_offset_residual=True,
+                bead_normalization=True,
+                bead_channels = ["1bead", "2bead"],
+                time_channel = ["clock"])
+```
 
 ## Datasets Supported
 
@@ -101,7 +142,7 @@ We only support the following datasets as of now. The *Literal* is the string li
 | Levine-32dim | levine32 |
 | Samusik | samusik |
 
-More datasets will be added in the future to be fully compatible with HDCytoData. 
+More datasets will be added in the future to be fully compatible with HDCytoData and to potentially incorporate other databases.
 
 ## Documentation
 
@@ -113,6 +154,7 @@ We use ``sphinx`` and ``readthedocs`` for documentation! You will need to instal
 - sphinxcontrib-autoprogram
 - sphinx-autodoc-typehints
 
+We currently don't have an online documentation. You will need to build the docs on your own! More detailed docs coming soon!
 
 ## Unit Testing
 
