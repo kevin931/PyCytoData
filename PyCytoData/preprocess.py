@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 
 from numpy.typing import ArrayLike
@@ -11,11 +13,16 @@ def arcsinh(data: ArrayLike, channels: Optional[ArrayLike]=None, transform_chann
     to transform their data at a cofactor of their choice and to specify a transformation of their choice.
 
     :param data: The expression matrix array of two dimensions.
+    :type data: ArrayLike
     :param channels: The channel names of the expression matrix in the order of the columns, defaults to None
+    :type channels: ArrayLike, optional
     :param transform_channels: The channels to transformed as specify by name, defaults to None
+    :type transform_channels: ArrayLike, optional
     :param cofactor: The cofactor, defaults to 5
+    :type cofactor: int
     
     :return: The arcsinh transformed expression matrix.
+    :rtype: ArrayLike
     """
     
     if not isinstance(data, np.ndarray):
@@ -41,10 +48,14 @@ def gate_debris_removal(data: ArrayLike, channels: ArrayLike, bead_channels: Arr
     This is a first step of the gating procedures to remove debris. Channels names and bead channel names are needed.
 
     :param data: The expression matrix array of two dimensions.
+    :type data: ArrayLike
     :param channels: The channel names of the expression matrix in the order of the columns, defaults to None
+    :type channels: ArrayLike
     :param bead_channels: The bead channels as specify by name, defaults to None
+    :type bead_channels: ArrayLike
     
     :return: The gated expression matrix or an array of indices. 
+    :rtype: Tuple[np.ndarray, np.ndarray]
     """
     if not isinstance(data, np.ndarray):
         data = np.array(data)
@@ -74,11 +85,16 @@ def gate_intact_cells(data: ArrayLike, channels: ArrayLike, DNA_channels: ArrayL
     All channel names and DNA channel names needed.
 
     :param data: The expression matrix array of two dimensions.
+    :type data: ArrayLike
     :param channels: The channel names of the expression matrix in the order of the columns, defaults to None
+    :type channels: ArrayLike
     :param DNA_channels: The DNA channels as specify by name, defaults to None
+    :type DNA_channels: ArrayLike
     :param cutoff_DNA_sd: The number of standard deviations away from the mean to use as a cutoff for DNA channels, defaults to 2.
+    :type cutoff_DNA_sd: float
     
     :return: A tuple of the gated expression matrix and indices based on original data.
+    :rtype: Tuple[np.ndarray, np.ndarray]
     """
     
     if not isinstance(data, np.ndarray):
@@ -121,13 +137,18 @@ def gate_live_cells(data: ArrayLike, channels: ArrayLike, dead_channel: ArrayLik
     All channel names and 'Dead' channel names needed.
 
     :param data: The expression matrix array of two dimensions.
+    :type data: ArrayLike
     :param channels: The channel names of the expression matrix in the order of the columns, defaults to None
+    :type channels: ArrayLike
     :param dead_channel: The dead channels as specify by name, defaults to None
+    :type dead_channel: ArrayLike
     :param cutoff_quantile: The top quantile to be excluded, defaults to 0.03.
+    :type cutorff_quantile: float
     
     :return: A tuple of the gated expression matrix and indices based on original data.
+    :rtype: Tuple[np.ndarray, np.ndarray]
     
-    :raises ValueError: More than 1 "Dead" channel provided.
+    :raises ValueError: More than 1 "Dead" channel provided.    
     """
     
     if not isinstance(data, np.ndarray):
@@ -161,11 +182,16 @@ def gate_center_offset_residual(data: ArrayLike, channels: ArrayLike, cor_channe
     All channel names and the three channels are needed.
 
     :param data: The expression matrix array of two dimensions.
+    :type data: ArrayLike
     :param channels: The channel names of the expression matrix in the order of the columns, defaults to None
+    :type channels: ArrayLike
     :param cor_channels: The center, offset, and residual channels as specify by name, defaults to None
+    :type cor_channels: ArrayLike
     :param cutoff_quantile: The top and bottom quantile to be excluded, defaults to 0.03.
+    :type cutoff_quantile: float
     
     :return: A tuple of the gated expression matrix and indices based on original data.
+    :rtype: Tuple[np.ndarray, np.ndarray]
     """
     if not isinstance(data, np.ndarray):
         data = np.array(data)
@@ -210,12 +236,18 @@ def bead_normalization(data: ArrayLike, channels: ArrayLike, bead_channels: Arra
     becomes biased over time. To correct this, bead normaliztion is used.
 
     :param data: The expression matrix array of two dimensions.
+    :type data: ArrayLike
     :param channels: The channel names of the expression matrix in the order of the columns
+    :type channels: ArrayLike
     :param bead_channels: The bead channels as specify by name
+    :type bead_channels: ArrayLike
     :param time_channel: The time channels as specify by name
+    :type time_channel: ArrayLike
     :param transform_channels: The transform channels to apply the normalization as specify by name
+    :type transform_channels: ArrayLike
     
     :return: A tuple of the normalized expression matrix and indices based on original data.
+    :rtype: Tuple[np.ndarray, np.ndarray]
     
     :raises ValueError: More than 1 "Time" channel provided.
     """

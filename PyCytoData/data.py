@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pandas as pd
 import numpy as np
 from PyCytoData import exceptions, preprocess
@@ -25,6 +27,35 @@ def _verbose(message: str, verbose:bool=True):
 
 
 class PyCytoData():
+    """The CytoData Class for handling CyTOF data.
+
+    This is an all-purpose data class for handling CyTOF data. It is compatible with
+    benchmark datasets downloaded from the ``DataLoader`` class as well as users' own
+    CyTOF datasets. It has wideranging functionalities, include preprecessing, DR,
+    and much more.
+
+    :param expression_matrix: The expression matrix for the CyTOF sample. Rows are cells
+        and columns are channels.
+    :type expression_matrix: ArrayLike
+    :param channels: The name of the channels, defaults to None
+    :type channels: ArrayLike
+    :param cell_types: The cell types of the cells, defaults to None
+    :type cell_types: ArrayLike
+    :param sample_index: The indicies or names to indicate samples of each cell.
+        This allows the combination of multiple samples into one class, defaults to None
+    :type sample_index: ArrayLike
+    :param lineage_channels: The names of lineage channels, defaults to None
+    :type lineage_channels: ArrayLike
+    
+    :raises exceptions.ExpressionMatrixDimensionError: The expression matrix is not
+        or cannot be cast into a two dimensional array.
+    :raises exceptions.DimensionMismatchError: The number of channel names does not agree
+        with the number of columns of the expression matrix.
+    :raises exceptions.DimensionMismatchError: The number of cell types for all cells does not agree
+        with the number of rows of the expression matrix.
+    :raises exceptions.DimensionMismatchError: The number of sample indices does not agree
+        with the number of rows of the expression matrix.
+    """
     
     def __init__(self,
                  expression_matrix: ArrayLike,
@@ -32,31 +63,7 @@ class PyCytoData():
                  cell_types: Optional[ArrayLike]=None,
                  sample_index: Optional[ArrayLike]=None,
                  lineage_channels: Optional[ArrayLike]=None):
-        """The CytoData Class for handling CyTOF data.
 
-        This is an all-purpose data class for handling CyTOF data. It is compatible with
-        benchmark datasets downloaded from the ``DataLoader`` class as well as users' own
-        CyTOF datasets. It has wideranging functionalities, include preprecessing, DR,
-        and much more.
-
-        :param expression_matrix: The expression matrix for the CyTOF sample. Rows are cells
-            and columns are channels.
-        :param channels: The name of the channels, defaults to None
-        :param cell_types: The cell types of the cells, defaults to None
-        :param sample_index: The indicies or names to indicate samples of each cell.
-            This allows the combination of multiple samples into one class, defaults to None
-        :param lineage_channels: The names of lineage channels, defaults to None
-        
-        :raises exceptions.ExpressionMatrixDimensionError: The expression matrix is not
-            or cannot be cast into a two dimensional array.
-        :raises exceptions.DimensionMismatchError: The number of channel names does not agree
-            with the number of columns of the expression matrix.
-        :raises exceptions.DimensionMismatchError: The number of cell types for all cells does not agree
-            with the number of rows of the expression matrix.
-        :raises exceptions.DimensionMismatchError: The number of sample indices does not agree
-            with the number of rows of the expression matrix.
-        """
-        
         self._expression_matrix: np.ndarray = np.array(expression_matrix)
         if len(self._expression_matrix.shape) != 2:
             raise exceptions.ExpressionMatrixDimensionError(shape=self._expression_matrix.shape)
@@ -134,12 +141,12 @@ class PyCytoData():
          
          
     def preprocess(self,
-                   arcsinh: bool=True,
-                   gate_debris_removal: bool=True,
-                   gate_intact_cells: bool=True,
-                   gate_live_cells: bool=True,
-                   gate_center_offset_residual: bool = True,
-                   bead_normalization: bool=True,
+                   arcsinh: bool=False,
+                   gate_debris_removal: bool=False,
+                   gate_intact_cells: bool=False,
+                   gate_live_cells: bool=False,
+                   gate_center_offset_residual: bool = False,
+                   bead_normalization: bool=False,
                    auto_channels: bool=True,
                    bead_channels: Optional[ArrayLike]=None,
                    time_channel: Optional[ArrayLike]=None,
@@ -163,27 +170,44 @@ class PyCytoData():
         5. Gate for anomalies using center, offset, and residual channels. 
 
         :param data: The expression matrix array of two dimensions.
-        :param gate_debris removal: Whether to gate to remove debris, defaults to True.
+        :param gate_debris_removal: Whether to gate to remove debris, defaults to True.
+        :type gate_debris_removal: bool
         :param gate_intact_cells: Whether to gate for intact cells, defaults to True.
+        :type gate_intact_cells: bool
         :param gate_live_cells: Whether to gate for live cells, defaults to True.
+        :type gate_live_cells: bool
         :param gate_center_offset_residual: Whether to gate using center, offset, and residual channels, defaults to True.
+        :type gate_center_offset_residual: bool
         :param bead_normalizations: Whether to perform bead normalization, defaults to True.
+        :type bead_normalizations: bool
         :param auto_channels: Allow the method to recognize instrument and other non-lineage channels automatically.
             This can be overwritten by specifying channels in ``bead_channels``, ``time_channel``, ``cor_channels``,
             ``dead_channel``, and ``DNA_channels``, defaults to True.
+        :type auto_channels: bool
         :param bead_channels: The bead channels as specify by name, defaults to None
-        :param time_channel:The time channel as specify by name, defaults to None
+        :type bead_channels: ArrayLike, optional
+        :param time_channel: The time channel as specify by name, defaults to None
+        :type time_channel: ArrayLike, optional
         :param cor_channels: The Center, Offset, and Residual channels as specify by name, defaults to None
-        :param dead_channels: The dead channels as specify by name, defaults to None
+        :type cor_channels: ArrayLike, optional
+        :param dead_channel: The dead channels as specify by name, defaults to None
+        :type dead_channel: ArrayLike, optional
         :param DNA_channels: The DNA channels as specify by name, defaults to None
-        :param cutoff_DNA_channels: The standard deviation cutoff for DNA channels. Here, we
+        :type DNA_channels: ArrayLike, optional
+        :param cutoff_DNA_sd: The standard deviation cutoff for DNA channels. Here, we
             specifically measure how many standard deviations away from the mean, defaults to 2
+        :type cutoff_DNA_sd: float
         :param dead_cutoff_quantile: The cutoff quantiles for dead channels. The top specified quantile
             will be excluded, defaults to 0.03
+        :type dead_cutoff_quantile: float
         :param cor_cutoff_quantile: The cutoff quantiles for Center, Offset, and Residual channels. Both the top
             and bottom specified quantiles will be excluded, defaults to 0.03
+        :type cor_cutoff_quantile: float
+        :param verbose: Whether to print out progress.
+        :type verbose: bool
 
         :return: The gated expression matrix.
+        :rtype: np.ndarray
         """
         
         expression_processed: np.ndarray = deepcopy(self.expression_matrix)
@@ -258,12 +282,23 @@ class PyCytoData():
          
          
     @property
-    def expression_matrix(self):
+    def expression_matrix(self) -> np.ndarray:
+        """Getter for the expression matrix.
+        
+        :return: The expression matrix.
+        :rtype: np.ndarray
+        """
         return self._expression_matrix   
     
     
     @expression_matrix.setter
     def expression_matrix(self, expression_matrix: ArrayLike):
+        """Set expression matrix.
+
+        :param expression_matrix: The new expression matrix.
+        :type expression_matrix: ArrayLike
+        :raises exceptions.ExpressionMatrixDimensionError: The expression matrix is not two-dimensional.
+        """
         expression_matrix = np.array(expression_matrix)
         if len(expression_matrix.shape) != 2:
             raise exceptions.ExpressionMatrixDimensionError(expression_matrix.shape)
@@ -273,12 +308,23 @@ class PyCytoData():
         
   
     @property
-    def sample_index(self):
+    def sample_index(self) -> np.ndarray:
+        """Getter for sample_index.
+        
+        :return: The sample index.
+        :rtype: np.ndarray
+        """
         return self._sample_index
     
     
     @sample_index.setter
     def sample_index(self, sample_index: ArrayLike):
+        """Set sample_index.
+
+        :param sample_index: The sample index for each cell.
+        :type sample_index: ArrayLike
+        :raises exceptions.DimensionMismatchError: Sampel indices' length does not agree with number of features.
+        """
         sample_index = np.array(sample_index)
         if sample_index.shape[0] != self.n_cells:
             raise exceptions.DimensionMismatchError(n=self.n_cells, var = "sample_index")
@@ -287,12 +333,23 @@ class PyCytoData():
         
         
     @property
-    def cell_types(self):
+    def cell_types(self) -> np.ndarray:
+        """Getter for sample_index.
+        
+        :return: The cell types.
+        :rtype: np.ndarray
+        """
         return self._cell_types
     
     
     @cell_types.setter
     def cell_types(self, cell_types: ArrayLike):
+        """Set cell_types.
+
+        :param cell_types: The cell types.
+        :type cell_types: ArrayLike
+        :raises exceptions.DimensionMismatchError: Cell types' length does not agree with number of cells.
+        """
         cell_types = np.array(cell_types)
         if cell_types.shape[0] != self.n_cells:
             raise exceptions.DimensionMismatchError(n=self.n_cells, var = "cell_types")
@@ -301,12 +358,23 @@ class PyCytoData():
         
         
     @property
-    def channels(self):
+    def channels(self) -> np.ndarray:
+        """Getter for sample_index.
+        
+        :return: The sample index.
+        :rtype: np.ndarray
+        """
         return self._channels
     
     
     @channels.setter
     def channels(self, channels: ArrayLike):
+        """Set channels.
+
+        :param channels: The channel names.
+        :type channels: ArrayLike
+        :raises exceptions.DimensionMismatchError: Channels names' length does not agree with number of features.
+        """
         channels = np.array(channels)
         if channels.shape[0] != self.n_channels:
             raise exceptions.DimensionMismatchError(n=self.n_cells, var = "channels")
@@ -314,59 +382,114 @@ class PyCytoData():
         
         
     @property
-    def n_cells(self):
+    def n_cells(self) -> int:
+        """Getter for n_cells.
+
+        :return: The number of cells.
+        :rtype: int
+        """
         return self._n_cells
     
     
     @n_cells.setter
     def n_cells(self, n_cells: int):
+        """Set n_cells.
+
+        :param n_cells: The total number of cells in the ``expression_matrix``.
+        :type n_cells: int
+        :raises TypeError: The input is not an ``int``.
+        """
         if not isinstance(n_cells, int):
             raise TypeError(f"'n_cells' has to be 'int' instead of {type(n_cells)}")
         self._n_cells = n_cells
         
 
     @property
-    def n_channels(self):
+    def n_channels(self) -> int:
+        """Getter for n_channels.
+
+        :return: The number of channels.
+        :rtype: int
+        """
         return self._n_channels
     
     
     @n_channels.setter
     def n_channels(self, n_channels: int):
+        """Set n_channels.
+
+        :param n_channels: The total number of channels in the ``expression_matrix``.
+        :type n_channels: int
+        :raises TypeError: The input is not an ``int``.
+        """
         if not isinstance(n_channels, int):
             raise TypeError(f"'n_channels' has to be 'int' instead of {type(n_channels)}")
         self._n_channels = n_channels
         
         
     @property
-    def n_samples(self):
+    def n_samples(self) -> int:
+        """Getter for n_samples.
+
+        :return: The number of samples.
+        :rtype: int
+        """
         return self._n_samples
     
     
     @n_samples.setter
     def n_samples(self, n_samples: int):
+        """Set n_samples.
+
+        :param n_samples: The total number of samples in the ``expression_matrix``.
+        :type n_samples: int
+        :raises TypeError: The input is not an ``int``.
+        """
         if not isinstance(n_samples, int):
             raise TypeError(f"'n_samples' has to be 'int' instead of {type(n_samples)}")
         self._n_samples = n_samples
         
         
     @property
-    def n_cell_types(self):
+    def n_cell_types(self) -> int:
+        """"Getter for n_cell_types.
+
+        :return: The number of cell types.
+        :rtype: int
+        """
         return self._n_cell_types
     
     
     @n_cell_types.setter
     def n_cell_types(self, n_cell_types: int):
+        """Set n_cell_types.
+
+        :param n_cell_types: The total number of cell types in the ``expression_matrix``.
+        :type n_cell_types: int
+        :raises TypeError: The input is not an ``int``.
+        """
         if not isinstance(n_cell_types, int):
             raise TypeError(f"'n_samples' has to be 'int' instead of {type(n_cell_types)}")
         self._n_cell_types = n_cell_types
         
     @property
     def lineage_channels(self) -> Optional[np.ndarray]:
+        """Getter for lineage_channels.
+
+        :return: An array of lineage channels or None.
+        :rtype: np.ndarray, optional
+        """
         return self._lineage_channels
     
     
     @lineage_channels.setter
     def lineage_channels(self, lineage_channels: ArrayLike):
+        """Set lineage_channels.
+
+        :param lineage_channels: The names of the lineage channels in the ``channels``.
+        :type lineage_channels: int
+        :raises ValueError: Some lineage channels are not listed in channel names.
+        """
         self._lineage_channels: Optional[np.ndarray] = lineage_channels if lineage_channels is None else np.array(lineage_channels).flatten()
         if self._lineage_channels is not None and not np.all(np.isin(self._lineage_channels, self._channels)):
             raise ValueError("Some lineage channels are not listed in channel names.")
@@ -386,6 +509,22 @@ class DataLoader():
 
     @classmethod    
     def load_dataset(cls, dataset: Literal["levine13", "levine32", "samusik"], force_download: bool = False) -> PyCytoData:
+        """Load benchmark datasets.
+
+        This methods downloads and load benchmark datasets. The dataset is downloaded only once, which is then
+        cached for future use. Currently, we support three datasets:
+        
+        - ``levine13``
+        - ``levine32``
+        - ``samusik``
+
+        :param dataset: The name of the dataset.
+        :type dataset: Literal['levine13', 'levine32', 'samusik']
+        :param force_download: Whether to download dataset regardless of previous cache, defaults to False
+        :type force_download: bool
+        :return: The loaded dataset.
+        :rtype: PyCytoData
+        """
         
         if not cls._data_status[dataset]:
             cls._download_data(dataset = dataset, force_download = force_download)
@@ -405,9 +544,7 @@ class DataLoader():
                       dataset: Literal["levine13", "levine32", "samusik"],
                       force_download: bool=False) -> int:
         
-        """Method to download datasets.
-
-        """
+        """Method to download datasets."""
         urls: Dict[str, List[str]] = {"levine13": ["http://imlspenticton.uzh.ch/robinson_lab/HDCytoData/Levine_13dim/Levine_13dim_fcs_files.zip"],
                                        "levine32": ["http://imlspenticton.uzh.ch/robinson_lab/HDCytoData/Levine_32dim/Levine_32dim_fcs_files.zip"],
                                        "samusik": ["http://imlspenticton.uzh.ch/robinson_lab/HDCytoData/Samusik/Samusik_fcs_files.zip",
@@ -559,6 +696,7 @@ class FileIO():
 
         :raises TypeError: The ``files`` is neither a string nor a list of strings.
         :return: A PyCytoData object.
+        :rtype: PyCytoData
         """
         
         if not isinstance(files, str) and not isinstance(files, list):
@@ -645,7 +783,9 @@ class FileIO():
         :param dtype: NumPy data type, defaults to "%.18e"
         :type dtype: str, optional
         
-        ..note:: By default, this method does not overwrite existing files. In case a file exists,
+        .. note:: 
+        
+            By default, this method does not overwrite existing files. In case a file exists,
             a ``FileExistsError`` is thrown.
         """
         if os.path.exists(path) and not overwrite:

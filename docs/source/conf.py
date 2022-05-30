@@ -23,9 +23,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
     "sphinxcontrib.autoprogram",
-    "sphinx_autodoc_typehints",
-    "sphinx_git",
-    "sphinx.ext.napoleon"
+    "sphinx_git"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -51,7 +49,6 @@ html_theme_options = {
     'titles_only': True
 }
 
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+autodoc_type_aliases = {
+    'ArrayLike': 'ArrayLike'
+}

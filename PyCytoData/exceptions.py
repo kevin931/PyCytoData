@@ -1,6 +1,14 @@
 from typing import Tuple, List
 
 class ExpressionMatrixDimensionError(Exception):
+    """Error for Expression Matrix Dimension Error.
+
+    This error is thrown when the given expression matrix is not or cannot
+    be cast into a two dimensional array.
+
+    :param shape: The actual shape of the expression matrix.
+    :type shape: Tuple[int, ...]
+    """
     
     def __init__(self, shape: Tuple[int, ...]):
         self.shape = shape
@@ -11,6 +19,16 @@ class ExpressionMatrixDimensionError(Exception):
     
 
 class DimensionMismatchError(Exception):
+    """Error for mismatched dimensions.
+
+    This error is thrown when the given attribute does not match the length
+    of the data in the class.
+
+    :param n: The desired length of the attribute.
+    :type n: int
+    :param var: The name of the attribute.
+    :type var: str
+    """
     def __init__(self, n: int, var: str):
         self.n = n
         self.var = var
@@ -21,6 +39,14 @@ class DimensionMismatchError(Exception):
     
     
 class AutoChannelError(Exception):
+    """Auto Channel Failure.
+
+    This error is thrown when the ``auto_channels`` option has failed due
+    to regex unable to match necessary channels.
+
+    :param channels: The necessary channels.
+    :type channels: List[str]
+    """
     def __init__(self, channel: List[str]):
         self.channel: str = ", ".join(channel)
         super().__init__()

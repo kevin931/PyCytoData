@@ -1,5 +1,5 @@
 ##########################################################################
-PythonTemplate: A Template for Quickly Creating and Documenting Packages
+PyCytoData: An Elegant Data Analysis Tool for CyTOF
 ##########################################################################
 
 If you feel like you've been writing the same stuff over and over, you're not alone! This
@@ -39,4 +39,4 @@ repository is for your project (if you want your project to look like this!)
    :maxdepth: 1
    :caption: Resources
 
-   GitHub <https://github.com/kevin931/PythonTemplate/>
+   GitHub <https://github.com/kevin931/PyCytoData/>

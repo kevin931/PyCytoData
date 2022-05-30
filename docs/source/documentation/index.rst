@@ -12,3 +12,7 @@ Module Reference
 
 .. toctree::
    :maxdepth: 1
+
+   data
+   preprocess
+   exceptions
