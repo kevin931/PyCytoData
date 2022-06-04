@@ -124,7 +124,7 @@ def gate_intact_cells(data: ArrayLike, channels: ArrayLike, DNA_channels: ArrayL
     return_tup.append(indices[np.where((data[:,np.isin(channels, DNA_channels[0])] > cutoff_DNA1_lower).flatten() & 
                                        (data[:,np.isin(channels, DNA_channels[0])] < cutoff_DNA1_upper).flatten() & 
                                        (data[:,np.isin(channels, DNA_channels[1])] > cutoff_DNA2_lower).flatten() &
-                                       (data[:,np.isin(channels, DNA_channels[1])] < cutoff_DNA2_upper).flatten())[0],:])
+                                       (data[:,np.isin(channels, DNA_channels[1])] < cutoff_DNA2_upper).flatten())[0]])
     
     return tuple(return_tup)
 
@@ -169,10 +169,9 @@ def gate_live_cells(data: ArrayLike, channels: ArrayLike, dead_channel: ArrayLik
     indices: np.ndarray = np.arange(0, data.shape[0])
     return_tup: List = list()
     return_tup.append(data[(data[:, np.isin(channels, dead_channel)] < cutoff_dead).flatten(),:])
-    return_tup.append(indices[(data[:, np.isin(channels, dead_channel)] < cutoff_dead).flatten(),:])
+    return_tup.append(indices[(data[:, np.isin(channels, dead_channel)] < cutoff_dead).flatten()])
     
     return tuple(return_tup)
-    
     
     
 def gate_center_offset_residual(data: ArrayLike, channels: ArrayLike, cor_channels: ArrayLike, cutoff_quantile: float=0.03) -> Tuple[np.ndarray, np.ndarray]:
@@ -224,7 +223,7 @@ def gate_center_offset_residual(data: ArrayLike, channels: ArrayLike, cor_channe
                                        (data[:,np.isin(channels, cor_channels[1])] > cutoff1_lower).flatten() & 
                                        (data[:,np.isin(channels, cor_channels[1])] < cutoff1_upper).flatten() &
                                        (data[:,np.isin(channels, cor_channels[2])] > cutoff2_lower).flatten() & 
-                                       (data[:,np.isin(channels, cor_channels[2])] < cutoff2_upper).flatten())[0],:])
+                                       (data[:,np.isin(channels, cor_channels[2])] < cutoff2_upper).flatten())[0]])
     
     return tuple(return_tup)
     
@@ -314,4 +313,4 @@ def bead_normalization(data: ArrayLike, channels: ArrayLike, bead_channels: Arra
     for c in transform_channels:
         data[:, np.isin(channels, c)] = data[:, np.isin(channels, c)]/(correct_f_full.reshape(data.shape[0], 1)) #type: ignore
         
-    return tuple(data[keep,:], indices[keep]) #type: ignore
+    return data[keep,:], indices[keep] #type: ignore

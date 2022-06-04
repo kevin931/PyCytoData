@@ -230,9 +230,9 @@ class PyCytoData():
                 if len(time_channel) == 0: auto_channel_error.append("time_channel")
             if cor_channels is None and gate_center_offset_residual:
                 cor_channels = list(filter(lambda channel: re.match("residual", channel, re.IGNORECASE), channels)) #type: ignore
-                cor_channels.append(list(filter(lambda channel: re.match("center", channel, re.IGNORECASE), channels))) #type: ignore
-                cor_channels.append(list(filter(lambda channel: re.match("offset", channel, re.IGNORECASE), channels))) #type: ignore
-                if len(cor_channels) == 0: auto_channel_error.append("cor_channels")
+                cor_channels += list(filter(lambda channel: re.match("center", channel, re.IGNORECASE), channels)) #type: ignore
+                cor_channels += list(filter(lambda channel: re.match("offset", channel, re.IGNORECASE), channels)) #type: ignore
+                if len(cor_channels) < 3: auto_channel_error.append("cor_channels")
                 
             if len(auto_channel_error) > 0:
                 raise exceptions.AutoChannelError(auto_channel_error)

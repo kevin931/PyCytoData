@@ -52,4 +52,4 @@ class AutoChannelError(Exception):
         super().__init__()
         
     def __str__(self):
-        return f"AUto channel detection failed for the following channels: {self.channel}."
+        return f"Auto channel detection failed for the following channels: {self.channel}."
