@@ -166,11 +166,24 @@ class TestCytoData():
             
     def test_add_sample_expression_matrix_dimension_error(self):
         new_sample: np.ndarray = np.array([1.2, 2.3, 3.4])
-        sample_index: np.ndarray = np.array(["SampleB", "SampleB"])
+        sample_index: np.ndarray = np.array(["SampleB", "SampleB", "SampleB"])
         try:
             self.dataset.add_sample(expression_matrix=new_sample, sample_index=sample_index)
         except exceptions.ExpressionMatrixDimensionError as e:
             assert "The shape (3,) is unsupported. Please reshape it and ensure that the number of channels match." in str(e)
+        else:
+            raise
+            
+            
+    def test_add_sample_expression_feature_number_error(self):
+        new_sample: np.ndarray = np.array([[1.2, 2.3], [3.4, 5.5]])
+        sample_index: np.ndarray = np.array(["SampleB", "SampleB"])
+        try:
+            self.dataset.add_sample(expression_matrix=new_sample, sample_index=sample_index)
+        except exceptions.ExpressionMatrixDimensionError as e:
+            assert "The shape (2, 2) is unsupported. Please reshape it and ensure that the number of channels match." in str(e)
+        else:
+            raise
             
             
     def test_add_sample_no_cell_types(self):
@@ -207,12 +220,14 @@ class TestCytoData():
     
     
     @pytest.mark.parametrize("attr",
-        ["n_channels","n_cells","n_samples"])
+        ["n_channels","n_cells","n_samples", "n_cell_types"])
     def test_setter_type_error(self, attr: str):
         try:
             setattr(self.dataset, attr, "test")
         except TypeError as e:
             assert f"'{attr}' has to be 'int'" in str(e)
+        else:
+            assert False
         
         
     @pytest.mark.parametrize("attr,input_array,length",
@@ -224,14 +239,73 @@ class TestCytoData():
             setattr(self.dataset, attr, input_array)
         except exceptions.DimensionMismatchError as e:
             assert f"The `{attr}` attribute has to be of length {length}." in str(e)
+        else:
+            assert False
+            
+            
+    def test_setter_expression_dimension_erro(self):
+        try:
+            self.dataset.expression_matrix = np.array([1, 2, 3])
+        except exceptions.ExpressionMatrixDimensionError as e:
+            assert "The shape (3,) is unsupported. Please reshape it and ensure that the number of channels match." in str(e)
+        else:
+            assert False
             
             
     def test_lineage_channel_setter_error(self):
         try:
-            self.dataset.lineage_channels = np.array(["feature4"])
+            self.dataset.lineage_channels = np.array(["feature5"])
         except ValueError as e:
             assert "Some lineage channels are not listed in channel names." in str(e)
+        else:
+            raise
+            
+            
+    def test_constructor_expression_matrix_dimmenion_error(self):
+        try:
+            PyCytoData(np.array([1,2,3]))
+        except exceptions.ExpressionMatrixDimensionError as e:
+            assert "The shape (3,) is unsupported. Please reshape it and ensure that the number of channels match." in str(e)
+        else:
+            assert False
+            
     
+    @pytest.mark.parametrize("channels,sample_index,cell_types,n,var",
+                             [(np.array(["1", "2"]), None, None, 3, "channels"),
+                              (None, np.array(["1", "1", "1"]), None, 2, "sample_index"),
+                              (None, None, np.array(["1", "1", "1"]), 2, "cell_types")])
+    def test_constructor_dimension_mismatch_error(self, channels: np.ndarray, sample_index: np.ndarray, cell_types: np.ndarray, n: int, var: str):
+        expression: np.ndarray = np.array([[1,2,3],[2,1,3]])
+        try:
+            PyCytoData(expression, channels=channels, cell_types=cell_types, sample_index=sample_index)
+        except exceptions.DimensionMismatchError as e:
+            assert f"The `{var}` attribute has to be of length {n}." in str(e)
+        else:
+            assert False
+            
+            
+    def test_constructor_lineage_channel_error(self):
+        expression: np.ndarray = np.array([[1,2,3],[2,1,3]])
+        channels: np.ndarray = np.array(["1", "2", "3"])
+        lineage_channels: np.ndarray = np.array(["1", "2", "4"])
+        try:
+            PyCytoData(expression, channels=channels, lineage_channels=lineage_channels)
+        except ValueError as e:
+            assert "Some lineage channels are not listed in channel names." in str(e)
+        else:
+            assert False
+            
+            
+    def test_constructor_channel_name_value_error(self):
+        expression: np.ndarray = np.array([[1,2,3],[2,1,3]])
+        channels: np.ndarray = np.array(["1", "1", "3"])
+        try:
+            PyCytoData(expression, channels=channels)
+        except ValueError as e:
+            assert "Channel names not unique: This can result in ambiguities." in str(e)
+        else:
+            assert False
+            
     
     @classmethod
     def teardown_class(cls):
@@ -449,6 +523,12 @@ class TestFileIO():
             tsv_writer.writerow([1, 2, 3])
             tsv_writer.writerow([4, 5, 6])
             
+        with open("./tmp_pytest/file_read_test_csv2.txt", "w") as f:
+            tsv_writer: "_csv._writer" = csv.writer(f, delimiter=",")
+            tsv_writer.writerow(["col1", "col2", "col3"])
+            tsv_writer.writerow([7, 8, 9])
+            tsv_writer.writerow([10, 11, 12])
+            
         with open("./tmp_pytest/file_read_test_tsv.txt", "w") as f:
             tsv_writer: "_csv._writer" = csv.writer(f, delimiter="\t")
             tsv_writer.writerow([1.1, 2.2, 3.3])
@@ -471,6 +551,15 @@ class TestFileIO():
         else:
             assert None in out_file.channels
             assert out_file.expression_matrix.dtype == np.dtype("float64")
+            
+            
+    def test_load_delim_concat(self):
+        out_file: PyCytoData = FileIO.load_delim(["./tmp_pytest/file_read_test_csv.txt", "./tmp_pytest/file_read_test_csv2.txt"],
+                                                 col_names=True, delim=",", dtype = int)
+        assert isinstance(out_file, PyCytoData)
+        assert out_file.n_cells == 4
+        assert out_file.n_channels == 3
+        assert np.all(np.isin([0, 1], out_file.sample_index))
             
     
     @pytest.mark.parametrize("drop_cols,expected_shape",

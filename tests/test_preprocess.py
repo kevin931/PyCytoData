@@ -30,6 +30,18 @@ class TestPreprocess():
         assert out.shape == (100, 11)
         
         
+    def test_arcsinh_transform_channel_none(self):
+        out: np.ndarray = preprocess.arcsinh(self.data.tolist(), self.channels.tolist())
+        assert isinstance(out, np.ndarray)
+        assert out.shape == (100, 11)
+        
+        
+    def test_arcsinh_channel_none(self):
+        out: np.ndarray = preprocess.arcsinh(self.data.tolist())
+        assert isinstance(out, np.ndarray)
+        assert out.shape == (100, 11)
+        
+        
     def test_gate_debris_removal(self):
         out: np.ndarray
         indices: np.ndarray
