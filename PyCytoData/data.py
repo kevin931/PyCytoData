@@ -74,7 +74,7 @@ class PyCytoData():
         if channels is not None:
             self._channels = np.array(channels)
         else:
-            self._channels = np.full(self.n_channels, None)
+            self._channels = np.array(["Channel" + str(a) for a in range(self._n_channels)])
         
         if cell_types is None:
             self._cell_types = np.full(self.n_cells, None)
@@ -95,6 +95,8 @@ class PyCytoData():
             raise exceptions.DimensionMismatchError(n=self.n_cells, var = "cell_types")
         if self._sample_index.shape[0] != self.n_cells:
             raise exceptions.DimensionMismatchError(n=self.n_cells, var = "sample_index")
+        if np.unique(self._channels).shape[0] != self._n_channels:
+            raise ValueError("Channel names not unique: This can result in ambiguities.")
         
         self._lineage_channels: Optional[np.ndarray] = lineage_channels if lineage_channels is None else np.array(lineage_channels).flatten()
         if self._lineage_channels is not None and not np.all(np.isin(self._lineage_channels, self._channels)):
@@ -469,7 +471,7 @@ class PyCytoData():
         :raises TypeError: The input is not an ``int``.
         """
         if not isinstance(n_cell_types, int):
-            raise TypeError(f"'n_samples' has to be 'int' instead of {type(n_cell_types)}")
+            raise TypeError(f"'n_cell_types' has to be 'int' instead of {type(n_cell_types)}")
         self._n_cell_types = n_cell_types
         
     @property
@@ -490,9 +492,9 @@ class PyCytoData():
         :type lineage_channels: int
         :raises ValueError: Some lineage channels are not listed in channel names.
         """
-        self._lineage_channels: Optional[np.ndarray] = lineage_channels if lineage_channels is None else np.array(lineage_channels).flatten()
-        if self._lineage_channels is not None and not np.all(np.isin(self._lineage_channels, self._channels)):
+        if not np.all(np.isin(lineage_channels, self._channels)):
             raise ValueError("Some lineage channels are not listed in channel names.")
+        self._lineage_channels: Optional[np.ndarray] = lineage_channels if lineage_channels is None else np.array(lineage_channels).flatten()
 
 
 class DataLoader():
