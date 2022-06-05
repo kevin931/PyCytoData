@@ -20,6 +20,13 @@ from copy import deepcopy
 from numpy.typing import ArrayLike
 from typing import Optional, List, Dict, Literal, Any, Union
 
+OPT_PCK: Dict[str, bool] = {"CytofDR": True}
+
+try:
+    from CytofDR import dr
+except ImportError:
+    OPT_PCK["CytofDR"] = False
+
 
 def _verbose(message: str, verbose:bool=True):
     if verbose:
@@ -101,6 +108,8 @@ class PyCytoData():
         self._lineage_channels: Optional[np.ndarray] = lineage_channels if lineage_channels is None else np.array(lineage_channels).flatten()
         if self._lineage_channels is not None and not np.all(np.isin(self._lineage_channels, self._channels)):
             raise ValueError("Some lineage channels are not listed in channel names.")
+        
+        self._reductions: Optional[dr.Reductions] = None
     
     
     def add_sample(self, expression_matrix: ArrayLike, sample_index: ArrayLike, cell_types: Optional[ArrayLike]=None):
@@ -281,6 +290,20 @@ class PyCytoData():
         if gate_debris_removal or gate_intact_cells or gate_live_cells or gate_center_offset_residual or bead_normalization:
             self.cell_types = self.cell_types[indices]
             self.sample_index = self.sample_index[indices]
+            
+            
+    def run_dr_methods(self,
+                       methods: Union[str, List[str]]="all",
+                       out_dims: int=2,
+                       n_jobs: int=-1,
+                       verbose: bool=True,
+                       suppress_error_msg: bool=False
+                   ):
+        if not OPT_PCK["CytofDR"]:
+            raise ImportError("`CytofDr` is not installed. Please install `CytofDR` first.")
+        
+        self.reductions = dr.run_dr_methods(data=self.expression_matrix, methods=methods, out_dims=out_dims,
+                                            n_jobs=n_jobs, verbose=verbose, suppress_error_msg=suppress_error_msg)
          
          
     @property
@@ -495,6 +518,18 @@ class PyCytoData():
         if not np.all(np.isin(lineage_channels, self._channels)):
             raise ValueError("Some lineage channels are not listed in channel names.")
         self._lineage_channels: Optional[np.ndarray] = lineage_channels if lineage_channels is None else np.array(lineage_channels).flatten()
+        
+        
+    @property
+    def reductions(self) -> Optional[dr.Reductions]:
+        return self._reductions
+    
+    
+    @reductions.setter
+    def reductions(self, reductions: Optional[dr.Reductions]):
+        if not isinstance(reductions, dr.Reductions) and reductions is not None:
+            raise TypeError("'reductions' has to of type 'CytofDR.dr.Reductions' or None")
+        self._reductions = reductions
 
 
 class DataLoader():

@@ -12,6 +12,13 @@ import _csv
 
 from typing import List, Any, Dict, Tuple, Literal
 
+OPT_PCK: Dict[str, bool] = {"CytofDR": True}
+
+try:
+    from CytofDR import dr
+except ImportError:
+    OPT_PCK["CytofDR"] = False
+
 
 class TestCytoData():
     
@@ -127,6 +134,30 @@ class TestCytoData():
          ("lineage_channels", np.array(["feature1", "feature2"]))])
     def test_array_attributes_values(self, attr: str, expected: Any):
         assert np.all(getattr(self.dataset, attr) == expected)
+        
+        
+    def test_cytof_dr(self):
+        if OPT_PCK["CytofDR"]:
+            data: PyCytoData = PyCytoData(np.random.rand(100, 10))
+            data.run_dr_methods(["PCA", "ICA"])
+            assert isinstance(data.reductions, dr.Reductions)
+            assert data.reductions.reductions["PCA"].shape == (100, 2)
+            
+            
+    def test_reductions_setter(self):
+        if OPT_PCK["CytofDR"]:
+            self.dataset.reductions = dr.Reductions()
+            assert isinstance(self.dataset.reductions, dr.Reductions)
+            self.dataset.reductions = None
+            assert self.dataset.reductions is None
+            
+            wrong_reductions: Any = []
+            try:
+                self.dataset.reductions = wrong_reductions
+            except TypeError as e:
+                assert "'reductions' has to of type 'CytofDR.dr.Reductions' or None" in str(e)
+            else: 
+                assert False            
         
         
     def test_add_sample(self):
