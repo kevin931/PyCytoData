@@ -48,6 +48,76 @@ class TestCytoData():
     def test_metadata_attributes_values(self, attr: str, expected: Any):
         assert getattr(self.dataset, attr) == expected
         
+        
+    def test_preprocess(self):
+        expression_matrix: np.ndarray = np.abs(np.random.rand(500, 11))
+        channels: np.ndarray = np.array(["feature1", "feature2", "Bead1", "Bead2", "Center", "Offset", "Residual", "Dead", "DNA1", "DNA2", "Time"])
+        lineage_channels: np.ndarray = np.array(["feature1", "feature2"])
+        cell_types: np.ndarray = np.repeat(["A", "B"], 250)
+        sample_index: np.ndarray = np.repeat(["C", "D"], 250)
+        dataset = PyCytoData(expression_matrix=expression_matrix, channels=channels,lineage_channels=lineage_channels,
+                             sample_index=sample_index, cell_types=cell_types)
+        dataset.preprocess(gate_debris_removal=True,
+                           gate_center_offset_residual=True,
+                           gate_live_cells=True,
+                           gate_intact_cells=True,
+                           bead_normalization=True,
+                           arcsinh=True)
+        assert dataset.expression_matrix.shape[0] <= 1000
+        assert dataset.expression_matrix.shape[0] == dataset.n_cells
+        assert dataset.sample_index.shape[0] == dataset.n_cells
+        assert dataset.cell_types.shape[0] == dataset.n_cells
+        
+    
+    @pytest.mark.parametrize("auto_channels", [True, False])
+    def test_preprocess_manual_channels(self, auto_channels: bool):
+        expression_matrix: np.ndarray = np.abs(np.random.rand(500, 11))
+        channels: np.ndarray = np.array(["feature1", "feature2", "1bead", "2bead", "cen", "off", "res", "live", "dna1", "dna2", "clock"])
+        lineage_channels: np.ndarray = np.array(["feature1", "feature2"])
+        cell_types: np.ndarray = np.repeat(["A", "B"], 250)
+        sample_index: np.ndarray = np.repeat(["C", "D"], 250)
+        dataset = PyCytoData(expression_matrix=expression_matrix, channels=channels,lineage_channels=lineage_channels,
+                             sample_index=sample_index, cell_types=cell_types)
+        dataset.preprocess(gate_debris_removal=True,
+                           gate_center_offset_residual=True,
+                           gate_live_cells=True,
+                           gate_intact_cells=True,
+                           bead_normalization=True,
+                           arcsinh=True,
+                           cor_channels=["cen", "off", "res"],
+                           DNA_channels=["dna1", "dna2"],
+                           dead_channel=['live'],
+                           bead_channels=["1bead", "2bead"],
+                           time_channel=["clock"],
+                           auto_channels=auto_channels)
+        assert dataset.expression_matrix.shape[0] <= 1000
+        assert dataset.expression_matrix.shape[0] == dataset.n_cells
+        assert dataset.sample_index.shape[0] == dataset.n_cells
+        assert dataset.cell_types.shape[0] == dataset.n_cells
+    
+    
+    @pytest.mark.parametrize("channel_names,error_channel",
+                             [(["feature1", "feature2", "Bead1", "Bead2", "cen", "Offset", "Residual", "Dead", "DNA1", "DNA2", "Time"], "cor_channels"),
+                              (["feature1", "feature2", "1bead", "2bead", "Center", "Offset", "Residual", "Dead", "DNA1", "DNA2", "Time"], "bead_channels"),
+                              (["feature1", "feature2", "Bead1", "Bead2", "Center", "Offset", "Residual", "live", "DNA1", "DNA2", "Time"], "dead_channel"),
+                              (["feature1", "feature2", "Bead1", "Bead2", "Center", "Offset", "Residual", "Dead", "rna1", "rna2", "Time"], "DNA_channels"),
+                              (["feature1", "feature2", "Bead1", "Bead2", "Center", "Offset", "Residual", "Dead", "DNA1", "DNA2", "clock"], "time_channel")])
+    def test_preprocess_autochannel_error(self, channel_names: List[str], error_channel: str):
+        expression_matrix: np.ndarray = np.abs(np.random.rand(500, 11))
+        channels: np.ndarray = np.array(channel_names)
+        lineage_channels: np.ndarray = np.array(["feature1", "feature2"])
+        dataset = PyCytoData(expression_matrix=expression_matrix, channels=channels,lineage_channels=lineage_channels)
+        try:
+            dataset.preprocess(gate_debris_removal=True,
+                               gate_center_offset_residual=True,
+                               gate_live_cells=True,
+                               gate_intact_cells=True,
+                               bead_normalization=True)
+        except exceptions.AutoChannelError as e:
+            assert f"Auto channel detection failed for the following channels: {error_channel}." in str(e)
+        else:
+            assert False
+    
     
     @pytest.mark.parametrize("attr,expected",
         [("expression_matrix", np.array([[1.1, 2.2, 3.3], [4.4, 5.5, 6.6]])),
