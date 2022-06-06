@@ -702,7 +702,7 @@ class DataLoader():
             for j in range(len(subset)):
                 try:
                     cell_types[counter + int(subset[j,2])] = subset[j, 0]
-                except TypeError:
+                except TypeError: # paragma: no cover
                     continue
             counter += s
         

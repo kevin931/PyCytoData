@@ -601,6 +601,16 @@ class TestFileIO():
         out_file: PyCytoData = FileIO.load_delim(path, True, drop_columns=drop_cols, delim=",", dtype = int)
         assert out_file.expression_matrix.shape == expected_shape
         
+    
+    def test_load_delim_path_type_error(self):
+        try:
+            path: Any = {"a": "./tmp_pytest/file_read_test_csv.txt"}
+            FileIO.load_delim(path, True, drop_columns=True, delim=",", dtype = int)
+        except TypeError as e:
+            assert "'files' has to be str or a list of str as paths." in str(e)
+        else:
+            assert False
+        
         
     @pytest.mark.parametrize("save_list,path",
                     [([[1, 2, 3], [1, 2, 3]], "./tmp_pytest/2d_list_1.csv"),
