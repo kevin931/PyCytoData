@@ -353,7 +353,7 @@ class TestDataLoader():
             
         for dataset in ["levine13", "levine32", "samusik"]:
             exprs_path: str = "./tmp_pytest/data/"+ dataset + "/" + dataset +".txt"
-            types_path: str = "./tmp_pytest/data/"+ dataset + "/" + dataset +"_cell_types.txt"
+            types_path: str = "./tmp_pytest/data/"+ dataset + "/" + dataset +"_metadata.txt"
             
             with open(exprs_path, "w") as f:
                 tsv_writer: "_csv._writer" = csv.writer(f, delimiter="\t")
@@ -363,8 +363,8 @@ class TestDataLoader():
                 
             with open(types_path, "w") as f:
                 tsv_writer: "_csv._writer" = csv.writer(f, delimiter="\t")
-                tsv_writer.writerow(["B"])
-                tsv_writer.writerow(["A"])
+                tsv_writer.writerow(["B", "0"])
+                tsv_writer.writerow(["A", "1"])
         
         with open("./tmp_pytest/data/samusik/population_assignments.txt", "w") as f:
             tsv_writer: "_csv._writer" = csv.writer(f, delimiter="\t")
@@ -450,12 +450,13 @@ class TestDataLoader():
         data: PyCytoData = DataLoader.load_dataset(dataset=dataset)
         assert isinstance(data, PyCytoData)
         assert None not in data.cell_types
+        assert None not in data.sample_index
         assert data.n_cells == 2
         assert data.n_channels == 3
        
         
     def test_load_dataset_no_cell_types(self, mocker): 
-        os.remove("./tmp_pytest/data/levine13/levine13_cell_types.txt")
+        os.remove("./tmp_pytest/data/levine13/levine13_metadata.txt")
         mocker.patch("PyCytoData.DataLoader._data_status", {"levine13": True})
         mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
         mocker.patch("PyCytoData.DataLoader._data_path", {"levine13": "./tmp_pytest/data/" + "levine13/",
