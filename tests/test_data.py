@@ -142,6 +142,17 @@ class TestCytoData():
             data.run_dr_methods(["PCA", "ICA"])
             assert isinstance(data.reductions, dr.Reductions)
             assert data.reductions.reductions["PCA"].shape == (100, 2)
+            assert data.reductions.original_data is not None
+            
+    
+    def test_cytof_dr_cell_types(self):
+        if OPT_PCK["CytofDR"]:
+            data: PyCytoData = PyCytoData(np.random.rand(100, 10),
+                                          cell_types=np.repeat(["a", "b"], 50))
+            data.run_dr_methods(["PCA", "ICA"])
+            assert isinstance(data.reductions, dr.Reductions)
+            assert data.reductions.reductions["PCA"].shape == (100, 2)
+            assert data.reductions.original_cell_types is not None
             
             
     def test_reductions_setter(self):

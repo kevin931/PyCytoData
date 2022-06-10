@@ -304,6 +304,10 @@ class PyCytoData():
         
         self.reductions = dr.run_dr_methods(data=self.expression_matrix, methods=methods, out_dims=out_dims,
                                             n_jobs=n_jobs, verbose=verbose, suppress_error_msg=suppress_error_msg)
+        
+        self.reductions.add_evaluation_metadata(original_data=self.expression_matrix)
+        if np.any(self.cell_types != None):
+            self.reductions.add_evaluation_metadata(original_cell_types=self.cell_types)
          
          
     @property
