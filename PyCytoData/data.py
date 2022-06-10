@@ -568,10 +568,11 @@ class DataLoader():
             
         data: PyCytoData = FileIO.load_delim(cls._data_path[dataset]+dataset+".txt", col_names = True)
         
-        cell_type_path: str = cls._data_path[dataset] + dataset + "_cell_types.txt"
+        cell_type_path: str = cls._data_path[dataset] + dataset + "_metadata.txt"
         if os.path.exists(cell_type_path):
-            cell_types: np.ndarray = np.loadtxt(fname=cell_type_path, dtype ="str", delimiter="\t")
-            data.cell_types = cell_types
+            metadata: np.ndarray = np.loadtxt(fname=cell_type_path, dtype ="str", delimiter="\t")
+            data.cell_types = metadata[:,0].flatten()
+            data.sample_index = metadata[:,1].flatten()
             
         return data
             
