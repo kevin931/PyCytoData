@@ -348,6 +348,85 @@ class TestCytoData():
         else:
             assert False
             
+            
+    def test_subset_cell_types(self):
+        exprs_matrix: np.ndarray = np.random.rand(100, 10)
+        cell_types: np.ndarray = np.repeat(["TypeA", "TypeB"], 50)
+
+        exprs = PyCytoData(exprs_matrix, cell_types=cell_types)
+        exprs.subset(cell_types="TypeA")
+        assert exprs.n_cell_types == 1
+        assert exprs.n_cells == 50
+            
+    def test_subset_sample(self):
+        exprs_matrix: np.ndarray = np.random.rand(100, 10)
+        sample_index: np.ndarray = np.repeat(["SampleA", "SampleB"], 50)
+
+        exprs = PyCytoData(exprs_matrix, sample_index=sample_index)
+        exprs.subset(sample="SampleA")
+        assert exprs.n_cell_types == 1
+        assert exprs.n_cells == 50
+        
+        
+    def test_subset_both(self):
+        exprs_matrix: np.ndarray = np.random.rand(100, 10)
+        sample_index: np.ndarray = np.repeat(["SampleA", "SampleB"], 50)
+        cell_types: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 25)
+
+        exprs = PyCytoData(exprs_matrix, cell_types=cell_types, sample_index=sample_index)
+        exprs.subset(sample="SampleA", cell_types="TypeA")
+        assert exprs.n_cell_types == 1
+        assert exprs.n_cells == 25
+    
+    
+    def test_subset_not_in(self):
+        exprs_matrix: np.ndarray = np.random.rand(100, 10)
+        cell_types: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 25)
+
+        exprs = PyCytoData(exprs_matrix, cell_types=cell_types)
+        exprs.subset(cell_types="TypeA", not_in=True)
+        assert exprs.n_cell_types == 3
+        assert exprs.n_cells == 75
+        
+        
+    def test_subset_not_in_pace(self):
+        exprs_matrix: np.ndarray = np.random.rand(100, 10)
+        cell_types: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 25)
+
+        exprs = PyCytoData(exprs_matrix, cell_types=cell_types)
+        new_exprs = exprs.subset(cell_types="TypeA", not_in=True, in_place=False)
+        assert isinstance(new_exprs, PyCytoData)
+        assert new_exprs is not exprs
+        assert new_exprs.n_cell_types == 3
+        assert new_exprs.n_cells == 75
+        
+    
+    def test_subset_value_error_filter_all(self):
+        exprs_matrix: np.ndarray = np.random.rand(100, 10)
+        cell_types: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 25)
+
+        exprs = PyCytoData(exprs_matrix, cell_types=cell_types)
+        try:
+            exprs.subset(cell_types=["TypeA", "TypeB", "TypeC", "TypeD"], not_in=True)
+        except ValueError as e:
+            assert "Filtering out all cells with nothing in the expression matrix. This is unsupported." in str(e)
+        else:
+            assert False
+            
+            
+    def test_subset_type_error(self):
+        exprs_matrix: np.ndarray = np.random.rand(100, 10)
+        cell_types: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 25)
+
+        exprs = PyCytoData(exprs_matrix, cell_types=cell_types)
+        try:
+            exprs.subset()
+        except TypeError as e:
+            assert "'sample' and 'cell_types' cannot both be None." in str(e)
+        else:
+            assert False
+        
+            
     
     @classmethod
     def teardown_class(cls):

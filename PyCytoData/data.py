@@ -299,8 +299,28 @@ class PyCytoData():
                        verbose: bool=True,
                        suppress_error_msg: bool=False
                    ):
+        """Run dimension reduction methods.
+
+        This is a one-size-fits-all dispatcher that runs all supported methods in the module. It
+        supports running multiple methods at the same time at the sacrifice of some more
+        granular control of parameters. If you would like more customization, please use the
+        ``CytofDR`` package directly.
+        
+        :param methods: DR methods to run (not case sensitive).
+        :type methods: Union[str, List[str]]
+        :param out_dims: Output dimension of DR.
+        :type out_dims: int
+        :param n_jobs: The number of jobs to run when applicable, defaults to -1.
+        :type n_jobs: int
+        :param verbose: Whether to print out progress, defaults to ``True``.
+        :type verbose: bool
+        :param suppress_error_msg: Whether to suppress error messages print outs, defaults to ``False``.
+        :type supress_error_msg: bool
+        
+        :raises ImoportError: ``CytofDR`` is not installed.
+        """
         if not OPT_PCK["CytofDR"]:
-            raise ImportError("`CytofDr` is not installed. Please install `CytofDR` first.")
+            raise ImportError("`CytofDR` is not installed. Please install `CytofDR` first.")
         
         self.reductions = dr.run_dr_methods(data=self.expression_matrix, methods=methods, out_dims=out_dims,
                                             n_jobs=n_jobs, verbose=verbose, suppress_error_msg=suppress_error_msg)
@@ -308,6 +328,56 @@ class PyCytoData():
         self.reductions.add_evaluation_metadata(original_data=self.expression_matrix)
         if np.any(self.cell_types != None):
             self.reductions.add_evaluation_metadata(original_cell_types=self.cell_types)
+            
+    
+    def subset(self, sample: Optional[ArrayLike]=None, cell_types: Optional[ArrayLike]=None, not_in: bool=False, in_place: bool=True) -> Optional[PyCytoData]:
+        """Subset the dataset with specific cell types or samples.
+
+        This method allows you to subset and retain only certain samples or cell types of interest.
+
+        :param sample: The names of the samples to perform subset, defaults to None
+        :type sample: Optional[ArrayLike], optional
+        :param cell_types: The name of the cell types to perform subset, defaults to None
+        :type cell_types: Optional[ArrayLike], optional
+        :param not_in: Whether to filter out the provided cell types or samples, defaults to False
+        :type not_in: bool, optional
+        :param in_place: Whether to perform the subset in place. If not, a new object will be created and returned. defaults to True.
+        :type in_place: bool, optional
+        :return: A new PyCytoData after subsetting
+        :rtype: PyCytoData, optional
+        
+        :raises ValueErro: Filtering out all cells with nothing in the expression matrix, which is unsupported.
+        """
+        if sample is None and cell_types is None:
+            raise TypeError("'sample' and 'cell_types' cannot both be None.")
+        
+        filter_condition: np.ndarray = np.repeat(True, self.n_cells)
+        if sample is not None:
+            if not isinstance(sample, np.ndarray):
+                sample = np.array(sample)
+            filter_condition = np.logical_and(filter_condition, np.isin(self.sample_index, sample)) 
+            
+        if cell_types is not None:
+            if not isinstance(cell_types, np.ndarray):
+                cell_types = np.array(cell_types)
+            filter_condition = np.logical_and(filter_condition, np.isin(self.cell_types, cell_types))
+            
+        if not_in:
+             filter_condition = np.invert(filter_condition)
+             
+        if not np.any(filter_condition):
+            raise ValueError("Filtering out all cells with nothing in the expression matrix. This is unsupported.")
+        
+        if not in_place:
+            new_exprs: PyCytoData = deepcopy(self)
+            new_exprs.expression_matrix = new_exprs.expression_matrix[filter_condition, :]
+            new_exprs.sample_index = new_exprs.sample_index[filter_condition]
+            new_exprs.cell_types = new_exprs.cell_types[filter_condition]
+            return new_exprs
+            
+        self.expression_matrix = self.expression_matrix[filter_condition, :]
+        self.sample_index = self.sample_index[filter_condition]
+        self.cell_types = self.cell_types[filter_condition]
          
          
     @property
