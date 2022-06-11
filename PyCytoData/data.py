@@ -619,7 +619,7 @@ class DataLoader():
         _data_status[d] = os.path.exists(_data_path[d])
 
     @classmethod    
-    def load_dataset(cls, dataset: Literal["levine13", "levine32", "samusik"], force_download: bool = False) -> PyCytoData:
+    def load_dataset(cls, dataset: Literal["levine13", "levine32", "samusik"], sample: Optional[ArrayLike]=None, force_download: bool = False) -> PyCytoData:
         """Load benchmark datasets.
 
         This methods downloads and load benchmark datasets. The dataset is downloaded only once, which is then
@@ -628,9 +628,18 @@ class DataLoader():
         - ``levine13``
         - ``levine32``
         - ``samusik``
+        
+        This method also supports specifying a specific sample instead of loading the entire dataset. Below is a list
+        of samples available:
+        
+        - ``levine13``: ``0`` (There is only one sample in this case)
+        - ``levine32``: ``AML08`` and ``AML09``.
+        - ``samusik``: ``01``, ``02``, ..., ``09``, ``10``
 
         :param dataset: The name of the dataset.
         :type dataset: Literal['levine13', 'levine32', 'samusik']
+        :param sample: The specific sample to load from the dataset, defaults to None.
+        :type sample: ArrayLike, optional
         :param force_download: Whether to download dataset regardless of previous cache, defaults to False
         :type force_download: bool
         :return: The loaded dataset.
@@ -647,6 +656,8 @@ class DataLoader():
             metadata: np.ndarray = np.loadtxt(fname=cell_type_path, dtype ="str", delimiter="\t")
             data.cell_types = metadata[:,0].flatten()
             data.sample_index = metadata[:,1].flatten()
+            if sample is not None:
+                data.subset(sample=sample)
             
         return data
             

@@ -559,6 +559,19 @@ class TestDataLoader():
         assert data.n_cells == 2
         assert data.n_channels == 3
         
+        
+    def test_load_dataset_sample_subset(self, mocker):
+        mocker.patch("PyCytoData.DataLoader._data_status", {"levine32": True})
+        mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
+        mocker.patch("PyCytoData.DataLoader._data_path", {"levine13": "./tmp_pytest/data/" + "levine13/",
+                                                          "levine32": "./tmp_pytest/data/" + "levine32/",
+                                                          "samusik": "./tmp_pytest/data/" + "samusik/"})
+        
+        data: PyCytoData = DataLoader.load_dataset(dataset="levine32", sample="1")
+        assert isinstance(data, PyCytoData)
+        assert data.n_cells == 1
+        assert data.n_channels == 3
+        
     
     @pytest.mark.parametrize("force_download",
                             [True, False]
