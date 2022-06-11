@@ -649,15 +649,35 @@ class DataLoader():
         if not cls._data_status[dataset]:
             cls._download_data(dataset = dataset, force_download = force_download)
             
-        data: PyCytoData = FileIO.load_delim(cls._data_path[dataset]+dataset+".txt", col_names = True)
+        if sample is not None and not isinstance(sample, np.ndarray):
+            sample = np.array(sample).flatten()
+            
+        all_files = glob.glob(cls._data_path[dataset]+dataset+"*.txt")
+        files: List[str] = []
+        metadata_files: List[str] = []
+        for f in all_files:
+            if "metadata" in f:
+                metadata_files.append(f)
+            else:
+                files.append(f)
+
+        if sample is not None:
+            r = re.compile("(.*" + ".*)|(.*".join(sample) + ".*)")
+            files = list(filter(r.match, files))
+            metadata_files = list(filter(r.match, metadata_files))         
+            
+        data: PyCytoData = FileIO.load_delim(files=files, col_names = True)
+        metadata: Optional[np.ndarray] = None
+        for i, m in enumerate(metadata_files):
+            if i == 0:
+                metadata = np.loadtxt(fname=m, dtype ="str", delimiter="\t")
+            else:
+                assert metadata is not None
+                metadata = np.vstack((metadata, np.loadtxt(fname=m, dtype ="str", delimiter="\t")))
         
-        cell_type_path: str = cls._data_path[dataset] + dataset + "_metadata.txt"
-        if os.path.exists(cell_type_path):
-            metadata: np.ndarray = np.loadtxt(fname=cell_type_path, dtype ="str", delimiter="\t")
+        if metadata is not None:
             data.cell_types = metadata[:,0].flatten()
             data.sample_index = metadata[:,1].flatten()
-            if sample is not None:
-                data.subset(sample=sample)
             
         return data
             
@@ -692,110 +712,141 @@ class DataLoader():
             contents = urlopen(url)
             contents = contents.read()
             zip_file = ZipFile(BytesIO(contents))
-            print("Here")
             zip_file.extractall(cls._data_path[dataset])
         
-        data: PyCytoData = cls._preprocess(dataset)
-        path: str = cls._data_path[dataset] + dataset + ".txt"
-        cell_types: np.ndarray = data.cell_types.reshape(data.n_cells, 1)
-        sample_index: np.ndarray = data.sample_index.reshape(data.n_cells, 1)
-        meta_data: np.ndarray = np.concatenate((cell_types, sample_index), axis=1)
-        metadata_path: str = cls._data_path[dataset] + dataset + "_metadata.txt"
-        FileIO.save_np_array(data.expression_matrix, path, col_names = data.channels)
-        FileIO.save_np_array(meta_data, metadata_path, dtype="%s")
+        cls._preprocess(dataset)
         return 0
     
     
     @classmethod
-    def _preprocess(cls, dataset: Literal["levine13", "levine32", "samusik"]) -> PyCytoData:
+    def _preprocess(cls, dataset: Literal["levine13", "levine32", "samusik"]):
         
-        fcss: List[str] = glob.glob(cls._data_path[dataset] + "*.fcs")
-        exprs: pd.DataFrame = pd.DataFrame()
+        fcss: List[List[str]] = []
+        
+        if dataset == "levine13":
+            fcss.append(glob.glob(cls._data_path[dataset] + "*.fcs"))
+            cls._preprocess_levine13(fcss)
+        elif dataset == "levine32":
+            fcss.append(glob.glob(cls._data_path[dataset] + "*AML08*.fcs"))
+            fcss.append(glob.glob(cls._data_path[dataset] + "*AML09*.fcs"))
+            cls._preprocess_levine32(fcss)
+        elif dataset == "samusik":
+            for i in range(1, 11):
+                fcss.append(glob.glob(cls._data_path[dataset] + "*" + str(i).zfill(2)  + "*.fcs"))
+            cls._preprocess_samusik(fcss)
+    
+    
+    @classmethod
+    def _preprocess_levine13(cls, fcss: List[List[str]]): #pragma: no cover
+        exprs: Union[pd.DataFrame, np.ndarray] = pd.DataFrame()
         meta: Dict[str, Any] = {}
         sample_length = []
         temp: pd.DataFrame
         fcs: str
-        for fcs in fcss:
+        for fcs in fcss[0]:
             meta, temp = fcsparser.parse(fcs, reformat_meta=True)
             sample_length.append(len(temp))
             exprs = pd.concat([exprs, temp])
         
-        if dataset == "levine13":
-            data: PyCytoData = cls._preprocess_levine13(fcss, exprs, meta, sample_length)
-        elif dataset == "levine32":
-            data: PyCytoData = cls._preprocess_levine32(fcss, exprs, sample_length)
-        elif dataset == "samusik":
-            data: PyCytoData = cls._preprocess_samusik(fcss, exprs, sample_length)
-        
-        return data
-    
-    
-    @classmethod
-    def _preprocess_levine13(cls, fcss: List[str], exprs: pd.DataFrame, meta: Dict[str, Any], sample_length: List[int]) -> PyCytoData:
-        expression_matrix: np.ndarray = exprs.to_numpy() 
+        exprs= exprs.to_numpy() 
         # Cell Types
-        fcs_cell_types: List[str] = [types.split("_")[-2] for types in fcss]
+        fcs_cell_types: List[str] = [types.split("_")[-2] for types in fcss[0]]
         cell_types: np.ndarray = np.array([])
         for s in range(len(sample_length)):
             cell_types = np.concatenate((cell_types, np.repeat(fcs_cell_types[s], sample_length[s])))
         # channels
         colnames: np.ndarray = meta['_channels_']["$PnN"].to_numpy()
         # Construct data
-        data: PyCytoData = PyCytoData(expression_matrix, colnames, cell_types)
-        
-        return data
+        data: PyCytoData = PyCytoData(exprs, colnames, cell_types)
+        # Save Data
+        path: str = cls._data_path["levine13"] + "levine13" + ".txt"
+        cell_types: np.ndarray = data.cell_types.reshape(data.n_cells, 1)
+        sample_index: np.ndarray = data.sample_index.reshape(data.n_cells, 1)
+        meta_data: np.ndarray = np.concatenate((cell_types, sample_index), axis=1)
+        metadata_path: str = cls._data_path["levine13"] + "levine13" + "_metadata.txt"
+        FileIO.save_np_array(data.expression_matrix, path, col_names = data.channels)
+        FileIO.save_np_array(meta_data, metadata_path, dtype="%s")
     
     
     @classmethod
-    def _preprocess_levine32(cls, fcss: List[str], exprs: pd.DataFrame, sample_length: List[int]) -> PyCytoData:
-        colnames: np.ndarray = np.array(exprs.columns)
-        expression_matrix: np.ndarray = exprs.to_numpy()
-        # Cell Types and Sample Index
-        fcs_cell_types: List[str] = [types.split("_")[-2] for types in fcss]
-        cell_types: np.ndarray = np.array([])
-        sample_index: np.ndarray = np.array([])
-        sample_names: List[str] = [types.split("-")[3] for types in fcss]
-        for s in range(len(sample_length)):
-            cell_types = np.concatenate((cell_types, np.repeat(fcs_cell_types[s], sample_length[s])))
-            sample_index = np.concatenate((sample_index, np.repeat(sample_names[s], sample_length[s])))
-        # Construct data
-        data: PyCytoData = PyCytoData(expression_matrix, colnames, cell_types, sample_index)
+    def _preprocess_levine32(cls, fcss: List[List[str]]): #pragma: no cover
+        samples: List[str] = ["AML08", "AML09"]
+        for i, sam in enumerate(samples):
+            temp: pd.DataFrame
+            fcs: str
+            exprs: Union[pd.DataFrame, np.ndarray] = pd.DataFrame()
+            sample_length = []
+            for fcs in fcss[i]:
+                _, temp = fcsparser.parse(fcs, reformat_meta=True)
+                sample_length.append(len(temp))
+                exprs = pd.concat([exprs, temp])
         
-        return data
+            colnames: np.ndarray = np.array(exprs.columns)
+            exprs = exprs.to_numpy()
+            # Cell Types and Sample Index
+            fcs_cell_types: List[str] = [types.split("_")[-2] for types in fcss[i]]
+            cell_types: np.ndarray = np.array([])
+            sample_index: np.ndarray = np.array([])
+            sample_names: List[str] = [types.split("-")[3] for types in fcss[i]]
+            for s in range(len(sample_length)):
+                cell_types = np.concatenate((cell_types, np.repeat(fcs_cell_types[s], sample_length[s])))
+                sample_index = np.concatenate((sample_index, np.repeat(sample_names[s], sample_length[s])))
+            # Construct data
+            data: PyCytoData = PyCytoData(exprs, colnames, cell_types, sample_index)
+            # Save Data
+            path: str = cls._data_path["levine32"] + "levine32_" + sam + ".txt"
+            cell_types: np.ndarray = data.cell_types.reshape(data.n_cells, 1)
+            sample_index: np.ndarray = data.sample_index.reshape(data.n_cells, 1)
+            meta_data: np.ndarray = np.concatenate((cell_types, sample_index), axis=1)
+            metadata_path: str = cls._data_path["levine32"] + "levine32" + "_metadata_" + sam + ".txt"
+            FileIO.save_np_array(data.expression_matrix, path, col_names = data.channels)
+            FileIO.save_np_array(meta_data, metadata_path, dtype="%s")
     
     
     @classmethod
-    def _preprocess_samusik(cls, fcss: List[str], exprs: pd.DataFrame, sample_length: List[int]) -> PyCytoData:
-        colnames: np.ndarray = np.array(exprs.columns)
-        expression_matrix: np.ndarray = exprs.to_numpy()
-        # Sample Index
-        sample_index: np.ndarray = np.array([])
-        sample_names: List[str] = [types.split("_")[3] for types in fcss]
-        for s in range(len(sample_length)):
-            sample_index = np.concatenate((sample_index, np.repeat(sample_names[s], sample_length[s])))
-            
-        # Cell Types
+    def _preprocess_samusik(cls, fcss: List[List[str]]): #pragma: no cover
+
+        # Metadata
         meta_data: pd.DataFrame = pd.read_csv(cls._data_path["samusik"] + "population_assignments.txt", delimiter = "\t", header = None) #type: ignore
         temp: pd.DataFrame = meta_data[0].str.split("_| ", expand = True) #type: ignore
-        meta_data = pd.concat([meta_data, temp], axis = 1)
-        meta_array: np.ndarray = meta_data.iloc[:,[1,5,8]].to_numpy()
+        meta_data = pd.concat([meta_data, temp], axis = 1) #type: ignore
+        meta_array: np.ndarray = meta_data.iloc[:,[1,5,8]].to_numpy() #type: ignore
         
-        cell_types: List[str] = ["unassigned"]*expression_matrix.shape[0]
-        unique_sample: np.ndarray = np.unique(meta_array[:,1])
-        counter: int = 0
-        for i, s in enumerate(sample_length):
+        samples: List[str] = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10"]
+        for i, sam in enumerate(samples):
+            exprs: Union[pd.DataFrame, np.ndarray]
+            sample_length = []
+            _, exprs = fcsparser.parse(fcss[i][0], reformat_meta=True)
+            sample_length.append(len(temp))
+            
+            assert isinstance(exprs, pd.DataFrame)
+            colnames: np.ndarray = np.array(exprs.columns)
+            exprs = exprs.to_numpy()
+            # Sample Index
+            sample_index: np.ndarray = np.array([])
+            sample_names: str = fcss[i][0].split("_")[3]
+            sample_index = np.repeat(sample_names, exprs.shape[0])
+            # Cell Types
+            types: List[str] = ["unassigned"]*exprs.shape[0]
+            unique_sample: np.ndarray = np.unique(meta_array[:,1])
+            
             subset: np.ndarray = meta_array[meta_array[:,1] == unique_sample[i]]
             for j in range(len(subset)):
                 try:
-                    cell_types[counter + int(subset[j,2])] = subset[j, 0]
+                    types[int(subset[j,2])] = subset[j, 0]
                 except TypeError: # paragma: no cover
                     continue
-            counter += s
-        
-        # Construct data
-        data: PyCytoData = PyCytoData(expression_matrix, colnames, cell_types, sample_index)
-        
-        return data
+            
+            # Construct data
+            data: PyCytoData = PyCytoData(exprs, colnames, types, sample_index)
+            # Save Data
+            path: str = cls._data_path["samusik"] + "samusik_" + sam + ".txt"
+            cell_types: np.ndarray = data.cell_types.reshape(data.n_cells, 1)
+            sample_index: np.ndarray = data.sample_index.reshape(data.n_cells, 1)
+            meta_data: np.ndarray = np.concatenate((cell_types, sample_index), axis=1)
+            metadata_path: str = cls._data_path["samusik"] + "samusik_metadata_" + sam + ".txt"
+            FileIO.save_np_array(data.expression_matrix, path, col_names = data.channels)
+            FileIO.save_np_array(meta_data, metadata_path, dtype="%s")
 
 
 class FileIO():

@@ -1,3 +1,4 @@
+from unittest.mock import MagicMock
 from PyCytoData import FileIO, PyCytoData, DataLoader, exceptions
 import numpy as np
 import pandas as pd
@@ -427,7 +428,6 @@ class TestCytoData():
             assert False
         
             
-    
     @classmethod
     def teardown_class(cls):
         pass
@@ -442,90 +442,54 @@ class TestDataLoader():
         os.makedirs("./tmp_pytest/data/samusik")
             
         for dataset in ["levine13", "levine32", "samusik"]:
-            exprs_path: str = "./tmp_pytest/data/"+ dataset + "/" + dataset +".txt"
-            types_path: str = "./tmp_pytest/data/"+ dataset + "/" + dataset +"_metadata.txt"
+            exprs_path_01: str = "./tmp_pytest/data/"+ dataset + "/" + dataset +"_01.txt"
+            types_path_01: str = "./tmp_pytest/data/"+ dataset + "/" + dataset +"_metadata_01.txt"
+            exprs_path_02: str = "./tmp_pytest/data/"+ dataset + "/" + dataset +"_02.txt"
+            types_path_02: str = "./tmp_pytest/data/"+ dataset + "/" + dataset +"_metadata_02.txt"
             
-            with open(exprs_path, "w") as f:
+            with open(exprs_path_01, "w") as f:
                 tsv_writer: "_csv._writer" = csv.writer(f, delimiter="\t")
                 tsv_writer.writerow(["CD1", "CD2", "CD3"])
                 tsv_writer.writerow([4.4, 5.5, 6.6])
                 tsv_writer.writerow([1.2, 1.3, 1.4])
                 
-            with open(types_path, "w") as f:
+            with open(types_path_01, "w") as f:
                 tsv_writer: "_csv._writer" = csv.writer(f, delimiter="\t")
-                tsv_writer.writerow(["B", "0"])
-                tsv_writer.writerow(["A", "1"])
+                tsv_writer.writerow(["B", "01"])
+                tsv_writer.writerow(["A", "01"])
+                
+                
+            with open(exprs_path_02, "w") as f:
+                tsv_writer: "_csv._writer" = csv.writer(f, delimiter="\t")
+                tsv_writer.writerow(["CD1", "CD2", "CD3"])
+                tsv_writer.writerow([4.7, 5.8, 6.6])
+                tsv_writer.writerow([1.5, 1.3, 1.8])
+                
+            with open(types_path_02, "w") as f:
+                tsv_writer: "_csv._writer" = csv.writer(f, delimiter="\t")
+                tsv_writer.writerow(["B", "02"])
+                tsv_writer.writerow(["A", "02"])
+        
         
         with open("./tmp_pytest/data/samusik/population_assignments.txt", "w") as f:
             tsv_writer: "_csv._writer" = csv.writer(f, delimiter="\t")
             tsv_writer.writerow(["a_a_a_01_a.fcs Event 000", "TypeA"])
             tsv_writer.writerow(["a_a_a_01_a.fcs Event 001", "TypeB"])
             tsv_writer.writerow(["a_a_a_02_a.fcs Event 000", "TypeA"])
-
-
-    def test_preprocess_levine32(self):
-        exprs: pd.DataFrame = pd.DataFrame({"FeatureA": [1.1, 2.2, 3.3],
-                                            "FeatureB": [4.4, 5.5, 6.6]})
-        fcss: List[str] = ["a-a-a-AML08-a_a_a_TypeA_a.fcs", "a-a-a-AML09-a_a_a_TypeB_a.fcs"]
-        sample_length: List[int] = [2, 1]
-        
-        data: PyCytoData = DataLoader._preprocess_levine32(fcss, exprs, sample_length)
-        assert isinstance(data, PyCytoData)
-        assert data.n_cells == 3
-        assert data.n_channels == 2
-        assert data.n_samples == 2
-
-
-    def test_preprocess_levine13(self):
-        exprs: pd.DataFrame = pd.DataFrame({"FeatureA": [1.1, 2.2, 3.3],
-                                            "FeatureB": [4.4, 5.5, 6.6]})
-        fcss: List[str] = ["a_a_a_TypeA_a.fcs", "a_a_a_TypeB_a.fcs"]
-        sample_length: List[int] = [2, 1]
-        meta: Dict[str, Any] = {"_channels_": {"$PnN": pd.Series(["FeatureA", "FeatureB"])}}
-        
-        data: PyCytoData = DataLoader._preprocess_levine13(fcss, exprs,meta, sample_length)
-        assert isinstance(data, PyCytoData)
-        assert data.n_cells == 3
-        assert data.n_channels == 2
-        assert data.n_samples == 1
-        
-        
-    def test_preprocess_samusik(self, mocker):
-        exprs: pd.DataFrame = pd.DataFrame({"FeatureA": [1.1, 2.2, 3.3],
-                                            "FeatureB": [4.4, 5.5, 6.6]})
-        fcss: List[str] = ["a_a_a_01_a.fcs", "a_a_a_02_a.fcs"]
-        sample_length: List[int] = [2, 1]
-        
-        mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
-        mocker.patch("PyCytoData.DataLoader._data_path", {"levine13": "./tmp_pytest/data/" + "levine13/",
-                                                          "levine32": "./tmp_pytest/data/" + "levine32/",
-                                                          "samusik": "./tmp_pytest/data/" + "samusik/"})
-        
-        data: PyCytoData = DataLoader._preprocess_samusik(fcss, exprs, sample_length)
-        assert isinstance(data, PyCytoData)
-        assert data.n_cells == 3
-        assert data.n_channels == 2
-        assert data.n_samples == 2
         
     
-    @pytest.mark.parametrize("dataset, expected",
-                             [("levine13", "levine13"),
-                              ("levine32", "levine32"),
-                              ("samusik", "samusik")]
+    @pytest.mark.parametrize("dataset",
+                             ["levine13",
+                              "levine32","samusik"]
                              )   
-    def test_preprocess(self, mocker, dataset: Literal["levine13", "levine32", "samusik"], expected: str):
+    def test_preprocess(self, mocker, dataset: Literal["levine13", "levine32", "samusik"]):
         fcss: List[str] = ["a_a_a_01_a.fcs", "a_a_a_02_a.fcs"]
-        exprs: pd.DataFrame = pd.DataFrame({"FeatureA": [1.1, 2.2, 3.3],
-                                            "FeatureB": [4.4, 5.5, 6.6]})
-        fcs: Tuple[Dict, pd.DataFrame] = ({}, exprs)
+        preprocess_mock = mocker.MagicMock()
         mocker.patch("PyCytoData.data.glob.glob", return_value=fcss)
-        mocker.patch("PyCytoData.data.fcsparser.parse",return_value=fcs)
-        mocker.patch("PyCytoData.DataLoader._preprocess_levine13", return_value="levine13")
-        mocker.patch("PyCytoData.DataLoader._preprocess_levine32", return_value="levine32")
-        mocker.patch("PyCytoData.DataLoader._preprocess_samusik", return_value="samusik")
+        mocker.patch("PyCytoData.DataLoader._preprocess_"+dataset, preprocess_mock)
+        DataLoader._preprocess(dataset=dataset)
         
-        out: Any = DataLoader._preprocess(dataset)
-        assert out == expected
+        assert preprocess_mock.called
         
     
     @pytest.mark.parametrize("dataset",
@@ -541,12 +505,14 @@ class TestDataLoader():
         assert isinstance(data, PyCytoData)
         assert None not in data.cell_types
         assert None not in data.sample_index
-        assert data.n_cells == 2
+        assert data.n_cells == 4
         assert data.n_channels == 3
        
         
     def test_load_dataset_no_cell_types(self, mocker): 
-        os.remove("./tmp_pytest/data/levine13/levine13_metadata.txt")
+        os.remove("./tmp_pytest/data/levine13/levine13_metadata_01.txt")
+        os.remove("./tmp_pytest/data/levine13/levine13_metadata_02.txt")
+        os.remove("./tmp_pytest/data/levine13/levine13_01.txt")
         mocker.patch("PyCytoData.DataLoader._data_status", {"levine13": True})
         mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
         mocker.patch("PyCytoData.DataLoader._data_path", {"levine13": "./tmp_pytest/data/" + "levine13/",
@@ -567,9 +533,9 @@ class TestDataLoader():
                                                           "levine32": "./tmp_pytest/data/" + "levine32/",
                                                           "samusik": "./tmp_pytest/data/" + "samusik/"})
         
-        data: PyCytoData = DataLoader.load_dataset(dataset="levine32", sample="1")
+        data: PyCytoData = DataLoader.load_dataset(dataset="levine32", sample="01")
         assert isinstance(data, PyCytoData)
-        assert data.n_cells == 1
+        assert data.n_cells == 2
         assert data.n_channels == 3
         
     
@@ -627,15 +593,11 @@ class TestDataLoader():
         mocker.patch("PyCytoData.data.urlopen", return_value = contents_mock)
         mocker.patch("PyCytoData.data.ZipFile", return_value = zip_mock)
         mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
-        expression_matrix: np.ndarray = np.array([[1, 2],[2, 3]])
-        data_mock: PyCytoData = PyCytoData(expression_matrix)
-        mocker.patch("PyCytoData.DataLoader._preprocess", return_value=data_mock)
-        save_array_mock: mocker.MagicMock = mocker.MagicMock()
-        mocker.patch("PyCytoData.FileIO.save_np_array", save_array_mock)
-        
+        preprocess_mock: mocker.MagicMock = mocker.MagicMock()
+        mocker.patch("PyCytoData.DataLoader._preprocess", preprocess_mock)
         out: int = DataLoader._download_data(dataset="levine13", force_download=force_download)
         
-        save_array_mock.assert_called()
+        preprocess_mock.assert_called()
         zip_mock.extractall.assert_called_once()
         contents_mock.read.assert_called_once()
         assert out == 0
