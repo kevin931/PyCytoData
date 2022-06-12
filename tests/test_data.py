@@ -470,12 +470,11 @@ class TestDataLoader():
                 tsv_writer.writerow(["B", "02"])
                 tsv_writer.writerow(["A", "02"])
         
-        
-        with open("./tmp_pytest/data/samusik/population_assignments.txt", "w") as f:
-            tsv_writer: "_csv._writer" = csv.writer(f, delimiter="\t")
-            tsv_writer.writerow(["a_a_a_01_a.fcs Event 000", "TypeA"])
-            tsv_writer.writerow(["a_a_a_01_a.fcs Event 001", "TypeB"])
-            tsv_writer.writerow(["a_a_a_02_a.fcs Event 000", "TypeA"])
+        # with open("./tmp_pytest/data/samusik/population_assignments.txt", "w") as f:
+        #     tsv_writer: "_csv._writer" = csv.writer(f, delimiter="\t")
+        #     tsv_writer.writerow(["a_a_a_01_a.fcs Event 000", "TypeA"])
+        #     tsv_writer.writerow(["a_a_a_01_a.fcs Event 001", "TypeB"])
+        #     tsv_writer.writerow(["a_a_a_02_a.fcs Event 000", "TypeA"])
         
     
     @pytest.mark.parametrize("dataset",
@@ -557,6 +556,32 @@ class TestDataLoader():
         assert data.n_cells == 2
         assert data.n_channels == 3
         mock_download.assert_called_with(dataset="levine13", force_download=force_download)
+        
+        
+    @pytest.mark.parametrize("dataset,sample", [("levine13", None),
+                                                ("levine32", "test01"),
+                                                ("samusik", "test01")])
+    def test_preprocess_save_datasets(self, mocker, dataset, sample):
+        mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
+        mocker.patch("PyCytoData.DataLoader._data_path", {"levine13": "./tmp_pytest/data/" + "levine13/",
+                                                          "levine32": "./tmp_pytest/data/" + "levine32/",
+                                                          "samusik": "./tmp_pytest/data/" + "samusik/"})
+        mocker.patch("PyCytoData.DataLoader._data_status", {dataset: True})
+        
+        data: PyCytoData = PyCytoData(expression_matrix=np.random.rand(10,2),
+                                      cell_types=np.repeat(["TypeA", "TypeB"], 5),
+                                      sample_index=np.repeat("test01", 10))
+        
+        DataLoader._preprocess_save_datasets(data, dataset, sample)
+        if sample is None:
+            data_path: str = "./tmp_pytest/data/" + dataset + "/" + dataset + ".txt"
+            metadata_path: str = "./tmp_pytest/data/" + dataset + "/" + dataset + "_metadata.txt"
+        else:
+            data_path: str = "./tmp_pytest/data/" + dataset + "/" + dataset + "_test01.txt"
+            metadata_path: str = "./tmp_pytest/data/" + dataset + "/" + dataset + "_metadata_test01.txt"
+        
+        assert os.path.exists(data_path)
+        assert os.path.exists(metadata_path)
 
             
     @pytest.mark.parametrize("input_value",

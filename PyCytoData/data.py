@@ -758,14 +758,7 @@ class DataLoader():
         colnames: np.ndarray = meta['_channels_']["$PnN"].to_numpy()
         # Construct data
         data: PyCytoData = PyCytoData(exprs, colnames, cell_types)
-        # Save Data
-        path: str = cls._data_path["levine13"] + "levine13" + ".txt"
-        cell_types: np.ndarray = data.cell_types.reshape(data.n_cells, 1)
-        sample_index: np.ndarray = data.sample_index.reshape(data.n_cells, 1)
-        meta_data: np.ndarray = np.concatenate((cell_types, sample_index), axis=1)
-        metadata_path: str = cls._data_path["levine13"] + "levine13" + "_metadata.txt"
-        FileIO.save_np_array(data.expression_matrix, path, col_names = data.channels)
-        FileIO.save_np_array(meta_data, metadata_path, dtype="%s")
+        cls._preprocess_save_datasets(data, "levine13")
     
     
     @classmethod
@@ -793,14 +786,7 @@ class DataLoader():
                 sample_index = np.concatenate((sample_index, np.repeat(sample_names[s], sample_length[s])))
             # Construct data
             data: PyCytoData = PyCytoData(exprs, colnames, cell_types, sample_index)
-            # Save Data
-            path: str = cls._data_path["levine32"] + "levine32_" + sam + ".txt"
-            cell_types: np.ndarray = data.cell_types.reshape(data.n_cells, 1)
-            sample_index: np.ndarray = data.sample_index.reshape(data.n_cells, 1)
-            meta_data: np.ndarray = np.concatenate((cell_types, sample_index), axis=1)
-            metadata_path: str = cls._data_path["levine32"] + "levine32" + "_metadata_" + sam + ".txt"
-            FileIO.save_np_array(data.expression_matrix, path, col_names = data.channels)
-            FileIO.save_np_array(meta_data, metadata_path, dtype="%s")
+            cls._preprocess_save_datasets(data, "levine32", sam)
     
     
     @classmethod
@@ -837,16 +823,27 @@ class DataLoader():
                 except TypeError: # paragma: no cover
                     continue
             
-            # Construct data
+            # Construct and save data
             data: PyCytoData = PyCytoData(exprs, colnames, types, sample_index)
-            # Save Data
-            path: str = cls._data_path["samusik"] + "samusik_" + sam + ".txt"
-            cell_types: np.ndarray = data.cell_types.reshape(data.n_cells, 1)
-            sample_index: np.ndarray = data.sample_index.reshape(data.n_cells, 1)
-            meta_data: np.ndarray = np.concatenate((cell_types, sample_index), axis=1)
-            metadata_path: str = cls._data_path["samusik"] + "samusik_metadata_" + sam + ".txt"
-            FileIO.save_np_array(data.expression_matrix, path, col_names = data.channels)
-            FileIO.save_np_array(meta_data, metadata_path, dtype="%s")
+            cls._preprocess_save_datasets(data, "samusik", sam)
+            
+            
+    @classmethod
+    def _preprocess_save_datasets(cls, data: PyCytoData, dataset: Literal["levine13", "levine32", "samusik"], sample: Optional[str]=None):
+        
+        if sample is None:
+            path: str = cls._data_path[dataset] + dataset + ".txt"
+            metadata_path: str = cls._data_path[dataset] + dataset + "_metadata" + ".txt"
+        else:
+            path: str = cls._data_path[dataset] + dataset + "_" + sample + ".txt"
+            metadata_path: str = cls._data_path[dataset] + dataset + "_metadata_" + sample + ".txt"
+        
+        cell_types: np.ndarray = data.cell_types.reshape(data.n_cells, 1)
+        sample_index: np.ndarray = data.sample_index.reshape(data.n_cells, 1)
+        meta_data: np.ndarray = np.concatenate((cell_types, sample_index), axis=1)
+        
+        FileIO.save_np_array(data.expression_matrix, path, col_names = data.channels)
+        FileIO.save_np_array(meta_data, metadata_path, dtype="%s")
 
 
 class FileIO():
