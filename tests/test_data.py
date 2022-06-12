@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock
 from PyCytoData import FileIO, PyCytoData, DataLoader, exceptions
 import numpy as np
-import pandas as pd
 
 import pytest
 import os
@@ -11,7 +10,7 @@ import shutil
 import csv
 import _csv
 
-from typing import List, Any, Dict, Tuple, Literal
+from typing import List, Any, Dict, Tuple, Literal, Union
 
 OPT_PCK: Dict[str, bool] = {"CytofDR": True}
 
@@ -661,8 +660,8 @@ class TestFileIO():
                 [("./tmp_pytest/file_read_test_csv.txt", ",", True, int),
                  ("./tmp_pytest/file_read_test_tsv.txt", "\t", False, float)]
                 )
-    def test_load_delim_filetype(self, path: str, delim: str, col_names: bool, dtype):
-        out_file: PyCytoData = FileIO.load_delim(path, col_names, delim=delim, dtype = dtype)
+    def test_load_expression_filetype(self, path: str, delim: str, col_names: bool, dtype):
+        out_file: PyCytoData = FileIO.load_expression(path, col_names, delim=delim, dtype = dtype)
         assert isinstance(out_file, PyCytoData)
         assert out_file.n_cells == 2
         assert out_file.n_channels == 3
@@ -675,8 +674,8 @@ class TestFileIO():
             assert out_file.expression_matrix.dtype == np.dtype("float64")
             
             
-    def test_load_delim_concat(self):
-        out_file: PyCytoData = FileIO.load_delim(["./tmp_pytest/file_read_test_csv.txt", "./tmp_pytest/file_read_test_csv2.txt"],
+    def test_load_expression_concat(self):
+        out_file: PyCytoData = FileIO.load_expression(["./tmp_pytest/file_read_test_csv.txt", "./tmp_pytest/file_read_test_csv2.txt"],
                                                  col_names=True, delim=",", dtype = int)
         assert isinstance(out_file, PyCytoData)
         assert out_file.n_cells == 4
@@ -687,16 +686,39 @@ class TestFileIO():
     @pytest.mark.parametrize("drop_cols,expected_shape",
             [([0, 1], (2, 1)), (1, (2,2))]
             )      
-    def test_load_delim_drop_col(self, drop_cols, expected_shape):
+    def test_load_expression_drop_col(self, drop_cols, expected_shape):
         path: str = "./tmp_pytest/file_read_test_csv.txt"
-        out_file: PyCytoData = FileIO.load_delim(path, True, drop_columns=drop_cols, delim=",", dtype = int)
+        out_file: PyCytoData = FileIO.load_expression(path, True, drop_columns=drop_cols, delim=",", dtype = int)
         assert out_file.expression_matrix.shape == expected_shape
         
+        
+    def test_load_delim_concat(self):
+        out_file: Union[np.ndarray, Tuple[np.ndarray, np.ndarray]] = FileIO.load_delim(["./tmp_pytest/file_read_test_csv.txt", "./tmp_pytest/file_read_test_csv2.txt"],
+                                                                                       skiprows=1, delim=",", dtype = int, return_sample_indices=False)
+        assert isinstance(out_file, np.ndarray)
+        assert out_file.shape == (4, 3)
+            
     
-    def test_load_delim_path_type_error(self):
+    @pytest.mark.parametrize("drop_cols,expected_shape",
+            [([0, 1], (2, 1)), (1, (2,2))]
+            )      
+    def test_load_delim_drop_col(self, drop_cols, expected_shape):
+        path: str = "./tmp_pytest/file_read_test_csv.txt"
+        out_file: Union[np.ndarray, Tuple[np.ndarray, np.ndarray]] = FileIO.load_delim(path,
+                                                                                       True,
+                                                                                       drop_columns=drop_cols,
+                                                                                       delim=",",
+                                                                                       dtype = int,
+                                                                                       return_sample_indices=False)
+        assert isinstance(out_file, np.ndarray)
+        assert out_file.shape == expected_shape
+        
+    
+    @pytest.mark.parametrize("method", ["load_delim", "load_expression"])
+    def test_load_expression_path_type_error(self, method: str):
         try:
             path: Any = {"a": "./tmp_pytest/file_read_test_csv.txt"}
-            FileIO.load_delim(path, True, drop_columns=True, delim=",", dtype = int)
+            getattr(FileIO, method)(path)
         except TypeError as e:
             assert "'files' has to be str or a list of str as paths." in str(e)
         else:

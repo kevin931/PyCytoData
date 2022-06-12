@@ -18,7 +18,7 @@ import re
 from copy import deepcopy
 
 from numpy.typing import ArrayLike
-from typing import Optional, List, Dict, Literal, Any, Union
+from typing import Optional, List, Dict, Literal, Any, Tuple, Union
 
 OPT_PCK: Dict[str, bool] = {"CytofDR": True}
 
@@ -666,7 +666,7 @@ class DataLoader():
             files = list(filter(r.match, files))
             metadata_files = list(filter(r.match, metadata_files))         
             
-        data: PyCytoData = FileIO.load_delim(files=files, col_names = True)
+        data: PyCytoData = FileIO.load_expression(files=files, col_names = True)
         metadata: Optional[np.ndarray] = None
         for i, m in enumerate(metadata_files):
             if i == 0:
@@ -850,20 +850,89 @@ class FileIO():
     
     @staticmethod
     def load_delim(files: Union[List[str], str],
-                   col_names: bool=True,
+                   skiprows: int=0,
                    drop_columns: Optional[Union[int, List[int]]]=None,
                    delim: str="\t",
-                   dtype = float
-                   ) -> PyCytoData:
+                   dtype: type = float,
+                   return_sample_indices: bool=False
+                   ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+        
+        """Load deliminated file(s) as a numpy array.
+
+        This method loads a deliminited file and returns a numpy array. The file
+        has to be a standard text file. It is essentially a wrapper for the
+        ``np.loadtxt`` function, but we offer the functionality of loading a list
+        of files all at once, which are automatically concatenated.
+    
+        :param files: The path (or a list of paths) to the files to be loaded.
+        :type files: Union[List[str], str]
+        :param skiprows: The number of rows to skip, default to 0.
+        :type skiprows: int, optional
+        :param drop_colums: The columns indices for those that need to be dropped, defaults to None.
+        :type drop_columns: Union[int, List[int]], optional.
+        :param delim: The delimiter to use, defaults to ``\\t``
+        :type delim: str, optional.
+        :param dtype: The data type for the arrays, defaults to ``float``.
+        :type dtype: type, optional
+
+        :raises TypeError: The ``files`` is neither a string nor a list of strings.
+        :return: An array or an array along with the sample indices.
+        :rtype: Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]
+        """
+        
+        if not isinstance(files, str) and not isinstance(files, list):
+            raise TypeError("'files' has to be str or a list of str as paths.")
+        elif not isinstance(files, list):
+            files = [files]
+        
+        f: np.ndarray = np.array([])
+        indices: np.ndarray = np.array([])
+        for i, file in enumerate(files):                            
+            # Load Data
+            temp_f: np.ndarray = np.loadtxt(fname=file, dtype=dtype, skiprows=skiprows, delimiter=delim)
+            if i==0:
+                f = temp_f
+                indices = np.repeat(i, temp_f.shape[0])
+            else:
+                f = np.vstack((f, temp_f))
+                indices = np.hstack((indices, np.repeat(i, temp_f.shape[0])))
+                
+        if drop_columns is not None:
+            f = np.delete(f, drop_columns, axis=1)
+                
+        if return_sample_indices:
+            return f, indices
+        else:
+            return f
+    
+    
+    @staticmethod
+    def load_expression(files: Union[List[str], str],
+                        col_names: bool=True,
+                        drop_columns: Optional[Union[int, List[int]]]=None,
+                        delim: str="\t",
+                        dtype = float
+                        ) -> PyCytoData:
         
         """Load a deliminited text file as a PyCytoData object.
 
-        This method loads a deliminited file and returns a PyCytoData object. The file
+        This method loads deliminited file(s) and returns a PyCytoData object. The file
         has to be a standard text file containing the expression matrix. Rows are cells
-        and columns are channel names. If ``col_names`` is ``True``, the first row of
+        and columns are channels. If ``col_names`` is ``True``, the first row of
         the file will be treated as channel names. If multiple file paths are present,
         they will be automatically concatenated into one object, but the sample
         indices will be recorded.
+        
+        :param files: The path (or a list of paths) to the files to be loaded.
+        :type files: Union[List[str], str]
+        :param col_names: Whether the first row is channel names, default to False.
+        :type col_names: bool, optional
+        :param drop_colums: The columns indices for those that need to be dropped, defaults to None.
+        :type drop_columns: Union[int, List[int]], optional.
+        :param delim: The delimiter to use, defaults to ``\\t``
+        :type delim: str, optional.
+        :param dtype: The data type for the arrays, defaults to ``float``.
+        :type dtype: type, optional
 
         :raises TypeError: The ``files`` is neither a string nor a list of strings.
         :return: A PyCytoData object.
@@ -876,35 +945,21 @@ class FileIO():
             files = [files]
         
         skiprows: int = 1 if col_names else 0
-        colnames: Optional[np.ndarray] = None
-        data: Optional[PyCytoData] = None
+        exprs: np.ndarray
+        indices: np.ndarray
+        colnames: np.ndarray
         
-        for i, file in enumerate(files):                            
-            # Load Data
-            f: "np.ndarray" = np.loadtxt(fname=file, dtype=dtype, skiprows=skiprows, delimiter=delim)
-            sample_index: np.ndarray = np.full(f.shape[0], i)
+        exprs, indices = FileIO.load_delim(files, skiprows, drop_columns, delim, dtype, return_sample_indices=True)
+        data: PyCytoData = PyCytoData(expression_matrix=exprs, sample_index=indices)
+        
+        if col_names:
+            colnames = np.loadtxt(fname=files[0], dtype ="str", max_rows=1, delimiter=delim)
             if drop_columns is not None:
-                f = np.delete(f, drop_columns, axis=1)
-            if i==0:
-                data = PyCytoData(expression_matrix=f, sample_index=sample_index)
-            else:
-                assert data is not None
-                data.add_sample(expression_matrix=f, sample_index=sample_index)
-                
-            # Load column names
-            if i==0:
-                if col_names:
-                    colnames = np.loadtxt(fname=file, dtype ="str", max_rows=1, delimiter=delim)
-                    if drop_columns is not None:
-                        colnames = np.delete(colnames, drop_columns)
-                    skiprows = 1
-                else:
-                    colnames = np.full(data.n_channels, None)
-        
-        assert data is not None
-        assert colnames is not None
+                colnames = np.delete(colnames, drop_columns)
+        else:
+            colnames = np.full(data.n_channels, None)
+
         data.channels = colnames
-        
         return data
     
     
