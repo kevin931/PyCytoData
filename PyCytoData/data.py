@@ -18,7 +18,7 @@ import re
 from copy import deepcopy
 
 from numpy.typing import ArrayLike
-from typing import Optional, List, Dict, Literal, Any, Tuple, Union
+from typing import Optional, List, Dict, Any, Tuple, Union
 
 OPT_PCK: Dict[str, bool] = {"CytofDR": True}
 
@@ -619,7 +619,7 @@ class DataLoader():
         _data_status[d] = os.path.exists(_data_path[d])
 
     @classmethod    
-    def load_dataset(cls, dataset: Literal["levine13", "levine32", "samusik"], sample: Optional[ArrayLike]=None, force_download: bool = False) -> PyCytoData:
+    def load_dataset(cls, dataset: str, sample: Optional[ArrayLike]=None, force_download: bool = False) -> PyCytoData:
         """Load benchmark datasets.
 
         This methods downloads and load benchmark datasets. The dataset is downloaded only once, which is then
@@ -637,7 +637,7 @@ class DataLoader():
         - ``samusik``: ``01``, ``02``, ..., ``09``, ``10``
 
         :param dataset: The name of the dataset.
-        :type dataset: Literal['levine13', 'levine32', 'samusik']
+        :type dataset: str
         :param sample: The specific sample to load from the dataset, defaults to None.
         :type sample: ArrayLike, optional
         :param force_download: Whether to download dataset regardless of previous cache, defaults to False
@@ -645,6 +645,10 @@ class DataLoader():
         :return: The loaded dataset.
         :rtype: PyCytoData
         """
+        
+        dataset = dataset.lower()
+        if dataset not in ["levine13", "levine32", "samusik"]:
+            raise ValueError()
         
         if not cls._data_status[dataset]:
             cls._download_data(dataset = dataset, force_download = force_download)
@@ -684,7 +688,7 @@ class DataLoader():
 
     @classmethod
     def _download_data(cls,
-                      dataset: Literal["levine13", "levine32", "samusik"],
+                      dataset: str,
                       force_download: bool=False) -> int:
         
         """Method to download datasets."""
@@ -719,7 +723,7 @@ class DataLoader():
     
     
     @classmethod
-    def _preprocess(cls, dataset: Literal["levine13", "levine32", "samusik"]):
+    def _preprocess(cls, dataset: str):
         
         fcss: List[List[str]] = []
         
@@ -829,7 +833,7 @@ class DataLoader():
             
             
     @classmethod
-    def _preprocess_save_datasets(cls, data: PyCytoData, dataset: Literal["levine13", "levine32", "samusik"], sample: Optional[str]=None):
+    def _preprocess_save_datasets(cls, data: PyCytoData, dataset: str, sample: Optional[str]=None):
         
         if sample is None:
             path: str = cls._data_path[dataset] + dataset + ".txt"
