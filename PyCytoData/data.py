@@ -648,7 +648,7 @@ class DataLoader():
         
         dataset = dataset.lower()
         if dataset not in ["levine13", "levine32", "samusik"]:
-            raise ValueError()
+            raise ValueError("Unsupported dataset: Have to be 'levine13', 'levine32', or 'samusik'.")
         
         if not cls._data_status[dataset]:
             cls._download_data(dataset = dataset, force_download = force_download)

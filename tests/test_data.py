@@ -475,6 +475,15 @@ class TestDataLoader():
         #     tsv_writer.writerow(["a_a_a_01_a.fcs Event 001", "TypeB"])
         #     tsv_writer.writerow(["a_a_a_02_a.fcs Event 000", "TypeA"])
         
+        
+    def test_load_dataset_value_error(self):        
+        try:
+            DataLoader.load_dataset(dataset="levine14")
+        except ValueError as e:
+            assert "Unsupported dataset: Have to be 'levine13', 'levine32', or 'samusik'." in str(e)
+        else:
+            assert False
+        
     
     @pytest.mark.parametrize("dataset",
                              ["levine13",
