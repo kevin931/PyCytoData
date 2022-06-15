@@ -1,16 +1,19 @@
-#####################
+======================
 Building and Testing
-#####################
+======================
 
-Here, you will find all the dependencies and the steps to build, test, and install! 
+All our package has been built for you! However, if you wish to join the development or build
+from source, you will find all the dependencies and the steps to build, test, and install! Our
+dependencies are quite standard for packages developed by our team, as we mainly use the same
+tools.
 
 **************
 Unit Testing
 **************
 
-During contribution, we would like to ensure that all our tests pass or add new
-tests! To do this, we use ``pytest`` internally, and our testing codes rely
-on it for mocking and parametrization.
+For contributions and new changes, we would like to ensure that all our tests pass. Or if
+necessary, we need to add new tests so that we can ensure code quality! To do this, we use
+``pytest`` internally, and our testing codes rely on it for mocking and parametrization.
 
 Dependencies
 -------------
@@ -40,7 +43,7 @@ If you don't want to do the installation, you can run the following:
 
 .. code-block:: shell 
 
-    pytest -m pytest --cov PythonTemplate
+    python -m pytest --cov PyCytoData
 
 ---------
 
@@ -49,7 +52,7 @@ If you don't want to do the installation, you can run the following:
 Documentation
 ***************
 
-Our documentation is automatically built by ReadTheDocs. However, if you inclined to build locally
+Our documentation is automatically built by ReadTheDocs. However, if you're so inclined to build locally
 or contribute to our docs, you're more than welcomed to do so!
 
 Dependencies
@@ -61,7 +64,6 @@ You will need the following packages:
 * sphinx-rtd-theme
 * sphinx-git
 * sphinxcontrib-autoprogram
-* sphinx-autodoc-typehints
 
 .. note::
 

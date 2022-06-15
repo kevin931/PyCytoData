@@ -1,8 +1,9 @@
-#########################
+==========================
 Development and Roadmap
-#########################
+==========================
 
-Here, we will document how we will support a typical package!
+We commit to supporting this package on the long run! Here, you will find our goals and milestones.
+We would like to bring you the peace of mind  while working with us!
 
 -------
 
@@ -10,7 +11,19 @@ Here, we will document how we will support a typical package!
 Project Roadmap and Milestones
 *********************************
 
-What's next?
+Here are our milestones that we would like to achieve for our package!
+
+Major Milestones
+------------------
+
+- Integration with Cytomulate
+- Support for more datasets
+
+Minor Milestones
+-------------------
+
+- Magic methods for ``PyCytoData`` class
+- More attributes
 
 ---------
 
@@ -18,14 +31,19 @@ What's next?
 Future Support and Maintenance
 *********************************
 
+Pre-Release (e.g. v.0.0.x): 
+
+    * **We are currently on pre-release**!
+    * Pre-releases do not follow the regular maintenance schedule
+    * **Support period: The next release supersedes the previous**.
+
 Patches (e.g. x.x.1):
 
     * Bug fixes and improvements that are urgently needed.
     * No new features or breaking changes.
     * **Suport period**: Only the latest patch of the minor release will be supported.
 
-Minor Updates (e.g. x.1.x):
-
+Minor Updates (e.g. x.1.x-
     * Minor updates consist of new features.
     * No breaking changes unless otherwise noted or absolutely critical. 
     * **Support period**: Two minor release cycles. (v.1.0.0 will be supported until the release of v.1.3.0)

@@ -1,7 +1,13 @@
 Recent Changes
 ===============
 
-Here we document the most recent changes to the project.
+Here you will see the latest changes committed to our GitHub! This is a snapshot
+of our latest development.
+
+.. note:: 
+
+    These change reflect only our development efforts. Please refer to release notes
+    for official changes.
 
 Git History
 -----------------

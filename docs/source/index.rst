@@ -48,6 +48,7 @@ tutorials below! Enjoy your journey working with CyTOF datasets!
    :maxdepth: 1
    :caption: Development
 
+   change/integration
    change/contribution
    change/build
    change/development
