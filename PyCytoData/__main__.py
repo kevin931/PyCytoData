@@ -1,5 +1,7 @@
+from PyCytoData.__init__ import __VERSION__
+
 def main():
-    print("Hello World")
+    print(f"PyCytoData Version: v{__VERSION__}")
 
 
 if __name__ == "__main__":

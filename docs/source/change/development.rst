@@ -18,6 +18,7 @@ Major Milestones
 
 - Integration with Cytomulate
 - Support for more datasets
+- Command-line Interface
 
 Minor Milestones
 -------------------
@@ -43,7 +44,7 @@ Patches (e.g. x.x.1):
     * No new features or breaking changes.
     * **Suport period**: Only the latest patch of the minor release will be supported.
 
-Minor Updates (e.g. x.1.x-
+Minor Updates (e.g. x.1.x):
     * Minor updates consist of new features.
     * No breaking changes unless otherwise noted or absolutely critical. 
     * **Support period**: Two minor release cycles. (v.1.0.0 will be supported until the release of v.1.3.0)

@@ -1,5 +1,6 @@
 import pytest
 from PyCytoData import __main__
+from PyCytoData.__init__ import __VERSION__
 
 import sys
 from io import StringIO
@@ -16,4 +17,4 @@ def test_main():
     # Set stdout back
     sys.stdout = screen_stdout
     #Check
-    assert "Hello World" in output
+    assert f"PyCytoData Version: v{__VERSION__}" in output
