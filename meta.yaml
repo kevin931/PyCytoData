@@ -22,7 +22,7 @@ requirements:
     - python
   run:
     - python >=3.7
-    - numpy >=1.21
+    - numpy >=1.20
     - pandas
     - fcsparser
 

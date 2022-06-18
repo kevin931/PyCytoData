@@ -93,7 +93,7 @@ setuptools.setup(
     long_description = open("README.md").read(),
     packages=["PyCytoData"],
     python_requires=">=3.7",
-    install_requires=["fcsparser", "pandas", "numpy>=1.21"],
+    install_requires=["fcsparser", "pandas", "numpy>=1.20"],
     test_requires=["pytest",
                    "pytest-cov",
                    "pytest-mock",
