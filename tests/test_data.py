@@ -1,4 +1,3 @@
-from unittest.mock import MagicMock
 from PyCytoData import FileIO, PyCytoData, DataLoader, exceptions
 import numpy as np
 
@@ -10,7 +9,8 @@ import shutil
 import csv
 import _csv
 
-from typing import List, Any, Dict, Tuple, Literal, Union
+from typing import List, Any, Dict, Tuple, Literal, Union, Optional
+from numpy.typing import ArrayLike
 
 OPT_PCK: Dict[str, bool] = {"CytofDR": True}
 
@@ -349,6 +349,18 @@ class TestCytoData():
             assert False
             
             
+    def test_subset_channels(self):
+        exprs_matrix: np.ndarray = np.random.rand(100, 10)
+        lineage_channels: np.ndarray = np.array(["Channel0", "Channel1", "Channel2"])
+        exprs = PyCytoData(exprs_matrix, lineage_channels=lineage_channels)
+        exprs.subset(channels=["Channel1", "Channel2"])
+        assert exprs.n_cells == 100
+        assert exprs.n_channels == 2
+        assert exprs.lineage_channels is not None
+        assert exprs.lineage_channels.shape[0] == 2
+        assert not np.isin("Channel0", exprs.lineage_channels)
+            
+            
     def test_subset_cell_types(self):
         exprs_matrix: np.ndarray = np.random.rand(100, 10)
         cell_types: np.ndarray = np.repeat(["TypeA", "TypeB"], 50)
@@ -368,15 +380,16 @@ class TestCytoData():
         assert exprs.n_cells == 50
         
         
-    def test_subset_both(self):
+    def test_subset_all(self):
         exprs_matrix: np.ndarray = np.random.rand(100, 10)
         sample_index: np.ndarray = np.repeat(["SampleA", "SampleB"], 50)
         cell_types: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 25)
 
         exprs = PyCytoData(exprs_matrix, cell_types=cell_types, sample_index=sample_index)
-        exprs.subset(sample="SampleA", cell_types="TypeA")
+        exprs.subset(channels=["Channel1", "Channel2"], sample="SampleA", cell_types="TypeA")
         assert exprs.n_cell_types == 1
         assert exprs.n_cells == 25
+        assert exprs.n_channels == 2
     
     
     def test_subset_not_in(self):
@@ -389,16 +402,20 @@ class TestCytoData():
         assert exprs.n_cells == 75
         
         
-    def test_subset_not_in_pace(self):
+    def test_subset_not_in_place(self):
         exprs_matrix: np.ndarray = np.random.rand(100, 10)
         cell_types: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 25)
+        lineage_channels: np.ndarray = np.array(["Channel0", "Channel1", "Channel2"])
 
-        exprs = PyCytoData(exprs_matrix, cell_types=cell_types)
-        new_exprs = exprs.subset(cell_types="TypeA", not_in=True, in_place=False)
+        exprs = PyCytoData(exprs_matrix, cell_types=cell_types, lineage_channels=lineage_channels)
+        new_exprs = exprs.subset(cell_types="TypeA", channels ="Channel0", not_in=True, in_place=False)
         assert isinstance(new_exprs, PyCytoData)
         assert new_exprs is not exprs
         assert new_exprs.n_cell_types == 3
         assert new_exprs.n_cells == 75
+        assert new_exprs.n_channels == 9
+        assert not np.isin("Channel0", new_exprs.lineage_channels)
+        assert not np.isin("Channel0", new_exprs.channels)
         
     
     def test_subset_value_error_filter_all(self):
@@ -422,10 +439,227 @@ class TestCytoData():
         try:
             exprs.subset()
         except TypeError as e:
-            assert "'sample' and 'cell_types' cannot both be None." in str(e)
+            assert "'channels', 'sample', and 'cell_types' cannot all be None." in str(e)
         else:
             assert False
         
+        
+    @pytest.mark.parametrize("features,n_channels",
+                             [("feature1", 1), (["feature1", "feature2"], 2)]) 
+    def test_get_channel_expressions(self, features: ArrayLike, n_channels: int):
+        expression, channels = self.dataset.get_channel_expressions(features)
+        assert isinstance(expression, np.ndarray)
+        assert isinstance(channels, np.ndarray)
+        assert expression.shape == (2, n_channels)
+        assert channels.shape[0] == n_channels
+        
+        
+    def test_get_channel_expressions_value_error(self):
+        try:
+            self.dataset.get_channel_expressions("channel100")
+        except ValueError as e:
+            assert "Some channels are not listed in channel names." in str(e)
+        else:
+            assert False
+            
+            
+    def test_len(self):
+        assert len(self.dataset) == self.dataset.n_cells
+        
+        
+    def test_str(self):
+        obj_str: str = f"A 'PyCytoData' object with {self.dataset.n_cells} cells, {self.dataset.n_channels} channels, {self.dataset.n_cell_types} cell types, and {self.dataset.n_samples} samples at"
+        assert obj_str in str(self.dataset)
+        
+        
+    def test_add(self):
+        exprs1: PyCytoData = PyCytoData(np.random.rand(20, 10),
+                                        sample_index=np.repeat("Sample1", 20),
+                                        cell_types=np.repeat(["Type1", "Type2"], 10))
+        exprs2: PyCytoData = PyCytoData(np.random.rand(30, 10),
+                                        sample_index=np.repeat("Sample2", 30),
+                                        cell_types=np.repeat(["Type3", "Type4"], 15))
+        exprs3: PyCytoData = exprs1 + exprs2
+        assert isinstance(exprs3, PyCytoData)
+        assert exprs3.n_cells == 50
+        assert exprs3.n_cell_types == 4
+        assert exprs3.n_samples == 2
+        
+        
+    def test_add_type_error(self):
+        exprs1: PyCytoData = PyCytoData(np.random.rand(20, 10),
+                                        sample_index=np.repeat("Sample1", 20),
+                                        cell_types=np.repeat(["Type1", "Type2"], 10))
+        try:
+            exprs1 + 1 #type: ignore
+        except TypeError as e:
+            assert "The right hand side has to be a 'PyCytoData' object." in str(e)
+        else:
+            assert False
+        
+    
+    def test_iadd(self):
+        exprs1: PyCytoData = PyCytoData(np.random.rand(20, 10),
+                                        sample_index=np.repeat("Sample1", 20),
+                                        cell_types=np.repeat(["Type1", "Type2"], 10))
+        exprs2: PyCytoData = PyCytoData(np.random.rand(30, 10),
+                                        sample_index=np.repeat("Sample2", 30),
+                                        cell_types=np.repeat(["Type3", "Type4"], 15))
+        exprs1 += exprs2
+        assert isinstance(exprs1, PyCytoData)
+        assert exprs1.n_cells == 50
+        assert exprs1.n_cell_types == 4
+        assert exprs1.n_samples == 2
+        
+        
+    def test_iadd_type_error(self):
+        exprs1: PyCytoData = PyCytoData(np.random.rand(20, 10),
+                                        sample_index=np.repeat("Sample1", 20),
+                                        cell_types=np.repeat(["Type1", "Type2"], 10))
+        try:
+            exprs1 += 1 #type: ignore
+        except TypeError as e:
+            assert "The right hand side has to be a 'PyCytoData' object." in str(e)
+        else:
+            assert False
+            
+    
+    @pytest.mark.parametrize("indices,n_cells,n_cell_types,n_samples",
+                             [([0,1,2], 3,1,1),
+                              (np.array([0,1,2]),3,1,1),
+                              ([10], 1,1,1)]
+                            )
+    def test_getitem_1d(self, indices: Union[List[int], np.ndarray], n_cells: int, n_cell_types: int, n_samples: int):
+        exprs_matrix: np.ndarray = np.random.rand(20, 10)
+        cell_types: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 5)
+        sample_index: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 5)
+        exprs = PyCytoData(exprs_matrix, cell_types=cell_types, sample_index=sample_index)
+        exprs = exprs[indices]
+        
+        assert exprs.n_channels == 10
+        assert exprs.n_cells == n_cells
+        assert exprs.n_cell_types == n_cell_types
+        assert exprs.n_samples == n_samples
+        
+    
+    @pytest.mark.parametrize("slice1,slice2,n_cells,n_cell_types,n_samples",
+                             [(None,10,10,2,2),
+                              (10,None,10,2,2),
+                              (None,None,20,4,4),
+                              (5,10,5,1,1)]
+                            )   
+    def test_getitem_1d_slice(self, slice1: Optional[int], slice2: Optional[int], n_cells: int, n_cell_types: int, n_samples: int):
+        exprs_matrix: np.ndarray = np.random.rand(20, 10)
+        cell_types: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 5)
+        sample_index: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 5)
+        exprs = PyCytoData(exprs_matrix, cell_types=cell_types, sample_index=sample_index)
+        exprs = exprs[slice1:slice2]
+        
+        assert exprs.n_channels == 10
+        assert exprs.n_cells == n_cells
+        assert exprs.n_cell_types == n_cell_types
+        assert exprs.n_samples == n_samples
+        
+    
+    @pytest.mark.parametrize("index1,index2,n_cells,n_cell_types,n_samples,n_channels",
+                             [([0,1,2],[0,1], 3,1,1,2),
+                              (np.array([0,1,2]),np.array([0,1,2]),3,1,1,3),
+                              ([10], [0], 1,1,1,1)]
+                            )
+    def test_getitem_2d(self,
+                        index1: Union[slice, List[int], np.ndarray],
+                        index2: Union[slice, List[int], np.ndarray],
+                        n_cells: int,
+                        n_cell_types: int,
+                        n_samples: int,
+                        n_channels: int):
+        exprs_matrix: np.ndarray = np.random.rand(20, 10)
+        cell_types: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 5)
+        sample_index: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 5)
+        exprs = PyCytoData(exprs_matrix, cell_types=cell_types, sample_index=sample_index)
+        exprs = exprs[index1, index2]
+        
+        assert exprs.n_channels == n_channels
+        assert exprs.n_cells == n_cells
+        assert exprs.n_cell_types == n_cell_types
+        assert exprs.n_samples == n_samples
+    
+    
+    def test_getitem_2d_slice(self):
+        exprs_matrix: np.ndarray = np.random.rand(20, 10)
+        cell_types: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 5)
+        sample_index: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 5)
+        exprs = PyCytoData(exprs_matrix, cell_types=cell_types, sample_index=sample_index)
+        exprs = exprs[:5,3:5]
+        
+        assert exprs.n_channels == 2
+        assert exprs.n_cells == 5
+        assert exprs.n_cell_types == 1
+        assert exprs.n_samples == 1
+        
+        
+    def test_getitem_2d_lineage_channels(self):
+        exprs_matrix: np.ndarray = np.random.rand(20, 10)
+        cell_types: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 5)
+        sample_index: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 5)
+        lineage_channels: np.ndarray = np.array(["Channel1", "Channel2"])
+        exprs = PyCytoData(exprs_matrix, cell_types=cell_types, sample_index=sample_index, lineage_channels=lineage_channels)
+        exprs = exprs[:5,:2]
+        
+        assert exprs.n_channels == 2
+        assert exprs.n_cells == 5
+        assert exprs.n_cell_types == 1
+        assert exprs.n_samples == 1
+        assert exprs.lineage_channels is not None
+        assert not np.isin("Channel2", exprs.lineage_channels)
+        assert exprs.lineage_channels.shape[0] == 1
+        
+        
+    def test_getitem_1d_type_error(self):
+        exprs_matrix: np.ndarray = np.random.rand(20, 10)
+        cell_types: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 5)
+        sample_index: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 5)
+        exprs = PyCytoData(exprs_matrix, cell_types=cell_types, sample_index=sample_index)
+        try:
+            exprs[1] #type: ignore
+        except TypeError as e:
+            assert "Invalid indices: Must be integer, slice, tuple, list, or numpy array." in str(e)
+        else:
+            assert False
+            
+    
+    @pytest.mark.parametrize("index1,index2", 
+                             [(1, [0,1]),
+                              ([0,1], 1)])
+    def test_getitem_2d_type_error(self, index1: Any, index2: Any):
+        exprs_matrix: np.ndarray = np.random.rand(20, 10)
+        cell_types: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 5)
+        sample_index: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 5)
+        exprs = PyCytoData(exprs_matrix, cell_types=cell_types, sample_index=sample_index)
+        try:
+            exprs[index1, index2]
+        except TypeError as e:
+            assert "Invalid indices: Must be integer, slice, tuple, list, or numpy array." in str(e)
+        else:
+            assert False
+            
+    
+    @pytest.mark.parametrize("index", 
+                             [np.array(0),
+                              np.array([[0,1],[0,1]])
+                             ])
+    def test_getitem_array_shape_error(self, index: np.ndarray):
+        exprs_matrix: np.ndarray = np.random.rand(20, 10)
+        cell_types: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 5)
+        sample_index: np.ndarray = np.repeat(["TypeA", "TypeB", "TypeC", "TypeD"], 5)
+        exprs = PyCytoData(exprs_matrix, cell_types=cell_types, sample_index=sample_index)
+        try:
+            exprs[index]
+        except IndexError as e:
+            assert "Invalid indices: Must be a 1d array." in str(e)
+        else:
+            assert False
+            
             
     @classmethod
     def teardown_class(cls):

@@ -330,11 +330,26 @@ class PyCytoData():
             self.reductions.add_evaluation_metadata(original_cell_types=self.cell_types)
             
     
-    def subset(self, sample: Optional[ArrayLike]=None, cell_types: Optional[ArrayLike]=None, not_in: bool=False, in_place: bool=True) -> Optional[PyCytoData]:
+    def subset(self, channels: Optional[ArrayLike]=None, sample: Optional[ArrayLike]=None, cell_types: Optional[ArrayLike]=None, not_in: bool=False, in_place: bool=True) -> Optional[PyCytoData]:
         """Subset the dataset with specific cell types or samples.
 
-        This method allows you to subset and retain only certain samples or cell types of interest.
+        This method allows you to subset the data using channels, samples,
+        or cell types. In terms of the expression matrix, channels subsets
+        are operations on columns, whereas sample or cell type subsets
+        are operations on rows.
+        
+        .. tip::
+            
+            To index specific channels and get the expression matrix instead of a ``PyCtyoData``
+            object, use the ``get_channel_expressions`` method.
+            
+        .. tip::
+        
+            To subset by indices, use the ``[]`` syntax, which supports indexing similar to that
+            of ``numpy``.
 
+        :param channels: The names of the channels to perform subset, defaults to None.
+        :type channels: Optional[ArrayLike], optional
         :param sample: The names of the samples to perform subset, defaults to None
         :type sample: Optional[ArrayLike], optional
         :param cell_types: The name of the cell types to perform subset, defaults to None
@@ -348,8 +363,14 @@ class PyCytoData():
         
         :raises ValueErro: Filtering out all cells with nothing in the expression matrix, which is unsupported.
         """
-        if sample is None and cell_types is None:
-            raise TypeError("'sample' and 'cell_types' cannot both be None.")
+        if sample is None and cell_types is None and channels is None:
+            raise TypeError("'channels', 'sample', and 'cell_types' cannot all be None.")
+        
+        channel_filter_condition: np.ndarray = np.repeat(True, self.n_channels)
+        if channels is not None:
+            if not isinstance(channels, np.ndarray):
+                channels = np.array(channels)
+            channel_filter_condition = np.logical_and(channel_filter_condition, np.isin(self.channels, channels))
         
         filter_condition: np.ndarray = np.repeat(True, self.n_cells)
         if sample is not None:
@@ -364,21 +385,158 @@ class PyCytoData():
             
         if not_in:
              filter_condition = np.invert(filter_condition)
+             channel_filter_condition = np.invert(channel_filter_condition)
              
         if not np.any(filter_condition):
             raise ValueError("Filtering out all cells with nothing in the expression matrix. This is unsupported.")
         
         if not in_place:
             new_exprs: PyCytoData = deepcopy(self)
-            new_exprs.expression_matrix = new_exprs.expression_matrix[filter_condition, :]
+            new_exprs.expression_matrix = new_exprs.expression_matrix[filter_condition]
+            new_exprs.expression_matrix = new_exprs.expression_matrix[:, channel_filter_condition]
+            new_exprs.channels = new_exprs.channels[channel_filter_condition]
+            if new_exprs.lineage_channels is not None:
+                new_exprs.lineage_channels = new_exprs.lineage_channels[np.isin(new_exprs.lineage_channels, new_exprs.channels)]
             new_exprs.sample_index = new_exprs.sample_index[filter_condition]
             new_exprs.cell_types = new_exprs.cell_types[filter_condition]
             return new_exprs
             
-        self.expression_matrix = self.expression_matrix[filter_condition, :]
+        self.expression_matrix = self.expression_matrix[filter_condition]
+        self.expression_matrix = self.expression_matrix[:, channel_filter_condition]
+        self.channels = self.channels[channel_filter_condition]
+        if self.lineage_channels is not None:
+            self.lineage_channels = self.lineage_channels[np.isin(self.lineage_channels, self.channels)]
         self.sample_index = self.sample_index[filter_condition]
         self.cell_types = self.cell_types[filter_condition]
-         
+        
+        
+    def get_channel_expressions(self, channels: ArrayLike) -> Tuple[np.ndarray, np.ndarray]:
+        """Get the expressions of specific channels.
+
+        This method subsets the expression matrix with the specific channels
+        specified and returns the expression matrix along with the channel
+        names. As opposed to ``subset``, this method is more useful for
+        investigating the expressions themselves rather than subsetting the
+        object as a whole.
+
+        :param channels: The channel names to subset the data.
+        :type channels: Union[str, List[str]]
+        :raises TypeError: The channels n
+        :raises ValueError: The channels specified are not listed in the channel names.
+        :return: A tuple of the expressions and the corresponding channel names.
+        :rtype: Tuple[np.ndarray, np.ndarray]
+        """
+        if not isinstance(channels, np.ndarray):
+            channels = np.array(channels)
+        if not np.all(np.isin(channels, self.channels)):
+            raise ValueError("Some channels are not listed in channel names.")
+        channel_indices: np.ndarray = np.isin(self.channels, channels)
+        return self.expression_matrix[:, channel_indices], self.channels[channel_indices]
+        
+        
+    def __len__(self):
+        """The length of the PyCytoData Class.
+
+        This method implements the ``len`` of the builtin
+        python method. It returns the number of total cells
+        in the expression matrix.
+
+        :return: The length of the object.
+        :rtype: int
+        """
+        return self.n_cells
+    
+    
+    def __iadd__(self, new_object: PyCytoData) -> PyCytoData:
+        if not isinstance(new_object, PyCytoData):
+            raise TypeError("The right hand side has to be a 'PyCytoData' object.")
+        self.add_sample(new_object.expression_matrix, sample_index=new_object.sample_index, cell_types=new_object.cell_types)
+        return self
+    
+    
+    def __add__(self, new_object: PyCytoData) -> PyCytoData:
+        if not isinstance(new_object, PyCytoData):
+            raise TypeError("The right hand side has to be a 'PyCytoData' object.")
+        out_object = deepcopy(self)
+        out_object.add_sample(new_object.expression_matrix, sample_index=new_object.sample_index, cell_types=new_object.cell_types)
+        return out_object
+    
+    
+    def __str__(self) -> str:
+        """String representation of the PyCytoData class.
+
+        This method returns a string containing the most basic metadata
+        of the class along with the memory address.
+
+        :return: The string representation of the class.
+        :rtype: str
+        """
+        out_str: str = f"A 'PyCytoData' object with {self.n_cells} cells, {self.n_channels} channels, {self.n_cell_types} cell types, and {self.n_samples} samples at {hex(id(self))}."
+        return out_str
+    
+    
+    def __getitem__(self, items: Union[slice, List[int], np.ndarray, Tuple[Union[slice, List[int], np.ndarray], Union[slice, List[int], np.ndarray]]]):
+        """The method to index elements of the PyCytoData object.
+
+        This method implements the bracket notation to index part of the class.
+        The notation is mostly consistent with the numpy indexing notation with a
+        few excetions, which is listed below. When indexing specific cells, the
+        metadata are appropriately indexed as well.
+        
+        A few deviations from the numpy notations:
+        
+        1. Integer indices are currently not supported. This is because indexing by integer
+            returns a 1-d array instead of a 2-d array, which can possibly cause confusion.
+        2. Indexing by two lists or arrays with different lengths are supported. They are
+            treated to index rows and columns, such as ``exprs[[0,1,2], [3,4]]`` is perfectly
+            valid to index the first 3 cells with the fourth and fifth channel.
+        
+        .. tip::
+        
+            To index columns/channels by name, use the ``subset`` method instead.
+
+        :param items: The indices for items.
+        :type items: Union[int, slice, List[int], Tuple[Any, Any]]
+        :raises IndexError: Two or more indices present.
+        :raises TypeError: Indexing by integer in either or both axes.
+        :raises IndexError: An higher dimensional array is used.
+        :raises TypeError: Invalid indices type used.
+        :return: An appropriately indexed ``PyCytoData`` object.
+        :rtype: PyCytoData
+        """
+        if isinstance(items, tuple):
+            if len(items) > 2:
+                raise IndexError("Invalid indices: Must be 1 or 2 indices.")
+            if (not isinstance(items[0], slice) and not isinstance(items[0], tuple) and
+                not isinstance(items[0], list) and not isinstance(items[0], np.ndarray)):
+                raise TypeError("Invalid indices: Must be integer, slice, tuple, list, or numpy array.")
+            if (not isinstance(items[1], slice) and not isinstance(items[1], tuple) and
+                not isinstance(items[1], list) and not isinstance(items[1], np.ndarray)):
+                raise TypeError("Invalid indices: Must be integer, slice, tuple, list, or numpy array.")
+            
+        if isinstance(items, np.ndarray):
+            if len(items.shape) != 1:
+                raise IndexError("Invalid indices: Must be a 1d array.")
+            
+        if (not isinstance(items, slice) and not isinstance(items, tuple) and
+            not isinstance(items, list) and not isinstance(items, np.ndarray)):
+            raise TypeError("Invalid indices: Must be integer, slice, tuple, list, or numpy array.")
+        
+        out_object = deepcopy(self)
+        if isinstance(items, tuple):
+            out_object.expression_matrix = out_object.expression_matrix[items[0],:][:,items[1]]
+            out_object.cell_types = out_object.cell_types[items[0]]
+            out_object.sample_index = out_object.sample_index[items[0]]
+            out_object.channels = out_object.channels[items[1]]
+            if out_object.lineage_channels is not None:
+                out_object.lineage_channels = out_object.lineage_channels[np.isin(out_object.lineage_channels, out_object.channels)]
+            return out_object
+        
+        out_object.expression_matrix = out_object.expression_matrix[items]
+        out_object.cell_types = out_object.cell_types[items]
+        out_object.sample_index = out_object.sample_index[items]
+        return out_object
+    
          
     @property
     def expression_matrix(self) -> np.ndarray:
