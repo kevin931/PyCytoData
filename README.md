@@ -5,84 +5,80 @@ This package is an all-in-one CyTOF data analysis package for your experiments. 
 
 ## Installation
 
-We're currently under development! To install, you can do the following:
+You can install ``PyCytoData`` easily from ``pip``:
 
-```shell
-git clone https://github.com/kevin931/PyCytoData
-cd PyCytoData
-python setup.py deveop
+```
+pip install PyCytoData
 ```
 
-This approach will allow you to use the package while developing!
+or from ``conda``:
 
-### Dependencies
+```
+conda install pycytodata -c kevin931 -c bioconda
+```
 
-We need the following dependencies:
+If you wish to use ``CytofDR`` along with PyCytoData, use can optionally install it as well:
 
-- fcsparser
-- pandas
-- numpy
+```
+pip install CytofDR
+```
+
+For more information on optional dependencies or installation details, look [here](https://pycytodata.readthedocs.io/en/latest/installation.html).
 
 ## Install and Load Benchmark Datasets
 
 You can load the data easily with the following python snippet:
 
 ```python
-from PyCytoData import DataLoader
+>>> from PyCytoData import DataLoader
 
-exprs = DataLoader.load_dataset(dataset = "levine13")
-exprs.expression_matrix # Expression matrix
-exprs.cell_types # Cell types
-exprs.sample_index # Sample index
-exprs.features # The feature/marker names
+>>> exprs = DataLoader.load_dataset(dataset = "levine13")
+>>> exprs.expression_matrix # Expression matrix
+>>> exprs.cell_types # Cell types
+>>> exprs.sample_index # Sample index
+>>> exprs.features # The feature/marker names
 ```
 
 The resulting ``exprs`` is a ``PyCytoData`` object, which is easy to use. The expression matrix, cell types (if available), and sample index are directly accessible with attributes, and they are all stored as **numpy.array**. You can also access some metadata of the object with the following attributes:
 
 ```python
-exprs.n_cells
-exprs.n_cell_types
-exprs.n_samples
-exprs.n_features
+>>> exprs.n_cells
+>>> exprs.n_cell_types
+>>> exprs.n_samples
+>>> exprs.n_features
 ```
 
 All these metadata is automatically set, and there is protection in place for unintended changes. You can also add a sample with the following:
 
 ```python
-exprs.add_sample(expression_matrix, cell_types, sample_index) # All inputs should be ArrayLike
+>>> exprs.add_sample(expression_matrix, cell_types, sample_index) # All inputs should be ArrayLike
 ```
 
-**Note**: The data are downloaded from a server instead of being shipped with this package. Each dataset only needs to be downloaded once, which is automatically managed. During the first-time download of the data, a command-line confirmation is needed. To override this, you can do the following: 
-
-```python 
-from PyCytoData import DataLoader
-
-exprs = DataLoader.load_dataset(dataset = "levine13", force_download = True)
-```
+**Note**: The data are downloaded from a server instead of being shipped with this package. Each dataset only needs to be downloaded once, which is automatically managed. During the first-time download of the data, a command-line confirmation is needed.
 
 ## Bring Your Own Dataset (BYOD)
 
 Yes, you read it right! You can load your own datasets. Currently, we only support reading in plain text files with saved with delimiters. The data need to have cells as rows and features as columns. To do load them in as a ``PyCytoData`` object, you can simply do the following:
 
 ```python
-from PyCytoData import FileIO
+>>> from PyCytoData import FileIO
 
-FileIO.load_delim(files="/path", # Path to file
-                  col_names=True, # Whether the first row is feature (column) names 
-                  delim="\t" # Delimiter
-                 ) 
+>>> FileIO.load_delim(files="/path", # Path to file
+...                   col_names=True, # Whether the first row is feature (column) names 
+...                   delim="\t" # Delimiter
+...                  ) 
 ```
 
 If your experiment has multiple samples, you can simply import them together:
 
 ```python
-from PyCytoData import FileIO
+>>> from PyCytoData import FileIO
 
-expression_paths = ["path1", "path2", "path3"]
-FileIO.load_delim(files=expression_paths, # Path to file
-                  col_names=True, # Whether the first row is feature (column) names 
-                  delim="\t" # Delimiter
-                 ) 
+>>> expression_paths = ["path1", "path2", "path3"]
+>>> FileIO.load_delim(files=expression_paths, # Path to file
+...                   col_names=True, # Whether the first row is feature (column) names 
+...                   delim="\t" # Delimiter
+...                  ) 
 ```
 
 In this case, the expression matrices are concatenated automatically without any normalization. To access particular samples, you can access the ``sample_index`` of the attribute and use the standard ``numpy`` indexing techniques.
@@ -94,43 +90,57 @@ In this case, the expression matrices are concatenated automatically without any
 Currently, ``levine13``, ``levine32``, and ``samusik`` have all been mostly preprocessed. All you need to do is to perform ``aecsinh`` transformaion. You can simply do this:
 
 ```python
-from PyCytoData import DataLoader
+>>> from PyCytoData import DataLoader
 
-exprs = DataLoader.load_dataset(dataset = "levine13")
-exprs.preprocess(arcsinh=True)
+>>> exprs = DataLoader.load_dataset(dataset = "levine13")
+>>> exprs.preprocess(arcsinh=True)
 ```
 
 When you perform BYOD, you can have much more flexibility:
 
 ```python
-from PyCytoData import FileIO
+>>> from PyCytoData import FileIO
 
-byod = FileIO.load_delim(files="/path", # Path to file
-                         col_names=True, # Whether the first row is feature (column) names 
-                         delim="\t" # Delimiter
-                        )
-byod.lineage_channels = ["CD4", "CD8", "FoxP3", "CD15"]
-byod.preprocess(arcsinh=True,
-                gate_debris_removal=True,
-                gate_intact_cells=True,
-                gate_live_cells=True,
-                gate_center_offset_residual=True,
-                bead_normalization=True)
+>>> byod = FileIO.load_delim(files="/path", # Path to file
+...                          col_names=True, # Whether the first row is feature (column) names 
+...                          delim="\t" # Delimiter
+...                         )
+>>> byod.lineage_channels = ["CD4", "CD8", "FoxP3", "CD15"]
+>>> byod.preprocess(arcsinh=True,
+...                 gate_debris_removal=True,
+...                 gate_intact_cells=True,
+...                 gate_live_cells=True,
+...                 gate_center_offset_residual=True,
+...                 bead_normalization=True)
 
 byod.expression_matrix # This is preprocessed
 ```
 As the example shows, we support five unique preprocessing steps! And of course, you can use a subset of these to suit your own needs! By default, we automatically detect the necessary channels, such as "Bead1" or "Center". However, if your dataset is unconventionally named, our auto-detect algorithm may fail. Thus, we can perform a manual override:
 
 ```python
-byod.preprocess(arcsinh=True,
-                gate_debris_removal=True,
-                gate_intact_cells=True,
-                gate_live_cells=True,
-                gate_center_offset_residual=True,
-                bead_normalization=True,
-                bead_channels = ["1bead", "2bead"],
-                time_channel = ["clock"])
+>>> byod.preprocess(arcsinh=True,
+...                 gate_debris_removal=True,
+...                 gate_intact_cells=True,
+...                 gate_live_cells=True,
+...                 gate_center_offset_residual=True,
+...                 bead_normalization=True,
+...                 bead_channels = ["1bead", "2bead"],
+...                 time_channel = ["clock"])
 ```
+
+## Dimension Reduction
+
+If you wish to run DR on your dataset, you can easily do so as well if you have ``CytofDR`` installed (assume you have loaded the dataset and preprocessed it accordingly):
+
+```python
+>>> exprs.run_dr_methods(methods = ["PCA", "UMAP", "ICA"])
+Running PCA
+Running ICA
+Running UMAP
+>>> type(exprs.reductions)
+<class 'CytofDR.dr.Reductions'>
+```
+The ``reductions`` attribute is a ``Reductions`` object from ``CytofDR``. You can perform all downstream DR workflows as usual.
 
 ## Datasets Supported
 
@@ -146,29 +156,59 @@ More datasets will be added in the future to be fully compatible with HDCytoData
 
 ## Documentation
 
-We use ``sphinx`` and ``readthedocs`` for documentation! You will need to install the following packages:
+For detailed documentation along with tutorials and API Reference, please visit our [Official Documentation](https://pycytodata.readthedocs.io/en/latest/). This is automatically updated with each update.
 
-- sphinx
-- sphinx-rtd-theme
-- sphinx-git
-- sphinxcontrib-autoprogram
-- sphinx-autodoc-typehints
+If you prefer to build documentation on your own, refer to [this guide](https://pycytodata.readthedocs.io/en/latest/change/build.html) for more details.
 
-We currently don't have an online documentation. You will need to build the docs on your own! More detailed docs coming soon!
+## Latest Release: 0.0.1
 
-## Unit Testing
+This is our latest pre-release with the following release notes:
 
-You will need the following packages:
+- This is the first official prerelease of the ``PyCytoData`` package.
+- We have proper support for the following workflows, including:
+    - Downloading data
+    - Using PyCytoData as CyTOF data analysis pipeline
+    - FileIO
+    - CyTOF DR Integration
+- Releases on PyPI and conda
 
-- pytest
-- pytest-cov
-- pytest-mock
-- coverage
+### Known Issue
+
+There is a potential issue of compatibility with ``CytofDR`` on ``conda``. If a problem occurs, try
+using pip instead.
 
 ## References
 
-[Levine J.H., Simonds E.F. Bendall S.C., Davis KL, Amir el-A.D., Tadmor M.D., Litvin O., Fienberg H.G., Jager A., Zunder E.R., Finck R., Gedman A.L., Radtke I., Downing J.R., & Pe'er D., Nolan G.P. "Data-Driven Phenotypic Dissection of AML Reveals Progenitor-like Cells that Correlate with Prognosis." *Cell*. 2015 Jul 2;162(1):184-97. doi: 10.1016/j.cell.2015.05.047.](https://pubmed.ncbi.nlm.nih.gov/26095251/)
+If you use ``PyCytoData`` to perform DR, citing the [our DR Review paper](https://doi.org/10.1101/2022.04.26.489549) is highly appreciated:
 
-[Samusik et al. (2016), "Automated mapping of phenotype space with single-cell data", *Nature Methods, 13*(6), 493-496](https://www.ncbi.nlm.nih.gov/pubmed/27183440)
+```
+@article {Wang2022.04.26.489549,
+	author = {Wang, Kaiwen and Yang, Yuqiu and Wu, Fangjiang and Song, Bing and Wang, Xinlei and Wang, Tao},
+	title = {Comparative Analysis of Dimension Reduction Methods for Cytometry by Time-of-Flight Data},
+	elocation-id = {2022.04.26.489549},
+	year = {2022},
+	doi = {10.1101/2022.04.26.489549},
+	publisher = {Cold Spring Harbor Laboratory},
+	URL = {https://www.biorxiv.org/content/early/2022/06/02/2022.04.26.489549},
+	eprint = {https://www.biorxiv.org/content/early/2022/06/02/2022.04.26.489549.full.pdf},
+	journal = {bioRxiv}
+}
+```
 
-[Weber L.M. and Soneson C. (2019). "HDCytoData: Collection of high-dimensional cytometry benchmark datasets in Bioconductor object formats." *F1000Research, 8*:1459, v2.](https://f1000research.com/articles/8-1459)
+If you use ``Cytomulate`` with this package, [our paper](https://doi.org/10.1101/2022.06.14.496200) can be cited here:
+
+```
+@article {Yang2022.06.14.496200,
+	author = {Yang, Yuqiu and Wang, Kaiwen and Lu, Zeyu and Wang, Tao and Wang, Xinlei},
+	title = {Cytomulate: Accurate and Efficient Simulation of CyTOF data},
+	elocation-id = {2022.06.14.496200},
+	year = {2022},
+	doi = {10.1101/2022.06.14.496200},
+	publisher = {Cold Spring Harbor Laboratory},
+	URL = {https://www.biorxiv.org/content/early/2022/06/16/2022.06.14.496200},
+	eprint = {https://www.biorxiv.org/content/early/2022/06/16/2022.06.14.496200.full.pdf},
+	journal = {bioRxiv}
+}
+```
+
+If you use the builtin datasets, please visit our [Reference Page](https://pycytodata.readthedocs.io/en/latest/references.html) and cite the papers accordingly.

@@ -12,18 +12,29 @@ if you prefer. Just follow the instructions below and you are good to go!
 Conda
 ***********
 
-It's a great idea to release your package on Conda!
+You can install our package on ``conda``:
 
+.. code-block::
 
----------
+    conda install pycytodata -c kevin931 -c bioconda
+
+Our ``conda`` package is published `here <https://anaconda.org/kevin931/pycytodata>`_.
+
+----------------
 
 ***********
 PyPI
 ***********
 
-It's a great idea to release your package on PyPI!
+You can also install our package on from ``PyPI``:
 
----------
+.. code-block::
+
+    pip install PyCytoData
+
+Our ``PyPI`` package is published `on this page <https://pypi.org/project/PyCytoData/>`_.
+
+----------------
 
 *************
 Dependencies

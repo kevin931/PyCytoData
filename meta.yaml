@@ -1,0 +1,48 @@
+{% set name = "PyCytoData" %}
+{% set version = "0.0.1" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  sha256: 8af8064b1a77e08947d8f12eb5757fdc1c25f88da28941be98d843add465c73a
+
+build:
+  noarch: python
+  number: 0
+  script: "{{ PYTHON }} -m pip install . --force-reinstall --no-deps -vv "
+
+requirements:
+  build:
+    - python
+    - setuptools
+  host:
+    - python
+  run:
+    - python >=3.7
+    - numpy >=1.21
+    - pandas
+    - fcsparser
+
+test:
+  requires:
+    - pytest
+    - pytest-cov
+    - coverage
+    - pytest-mock
+  imports:
+    - PyCytoData
+    
+
+about:
+  home: https://github.com/kevin931/PyCytoData
+  license: MIT
+  license_family: MIT
+  license_file: LICENSE.txt
+  summary: An Elegant Data Analysis Tool for CyTOF.
+
+extra:
+  recipe-maintainers:
+    - kevin931

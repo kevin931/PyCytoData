@@ -30,7 +30,7 @@ Usage: Project ideation and links to HDCytoData server
 
 Project: poetic
 Link: https://github.com/kevin931/poetic
-Usgae: Implementation of DataLoader in data.py 
+Usgae: Implementation of DataLoader in data.py; setup.py build commands.
 
     The MIT License (MIT)
 
