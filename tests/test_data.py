@@ -643,6 +643,17 @@ class TestCytoData():
         else:
             assert False
             
+            
+    def test_getitem_2d_tuple_length(self):
+        exprs_matrix: np.ndarray = np.random.rand(20, 10)
+        exprs = PyCytoData(exprs_matrix)
+        try:
+            exprs[:,:,:] #type: ignore
+        except IndexError as e:
+            assert "Invalid indices: Must be 1 or 2 indices." in str(e)
+        else:
+            assert False
+            
     
     @pytest.mark.parametrize("index", 
                              [np.array(0),
