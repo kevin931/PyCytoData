@@ -89,8 +89,11 @@ setuptools.setup(
     name = "PyCytoData",
     version = VERSION,
     description = "An Elegant Data Analysis Tool for CyTOF",
+    author="PyCytoData Developers",
+    url="https://github.com/kevin931/PyCytoData",
     long_description_content_type = "text/markdown",
     long_description = open("README.md").read(),
+    license="MIT",
     packages=["PyCytoData"],
     python_requires=">=3.7",
     install_requires=["fcsparser", "pandas", "numpy>=1.20"],
@@ -99,6 +102,7 @@ setuptools.setup(
                    "pytest-mock",
                    "coverage"],
     classifiers = [
+        "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3 :: Only",
         "Natural Language :: English"
     ],
