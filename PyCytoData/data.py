@@ -1210,37 +1210,3 @@ class FileIO():
                 f.write("\t".join(list(map(str, col_names))))
                 f.write("\n")
             np.savetxt(f, array, delimiter="\t", fmt=dtype)
-            
-    
-    @staticmethod
-    def make_dir(dir_path: str, add_number_if_dir_exists: bool = False, _counter: int=0) -> str:
-        """Create a new directory
-
-        :param dir_path: Path to the new directory to be created
-        :type dir_path: str
-        :param add_number_if_dir_exists: If the directory already exists, append a number to the
-            name until creation of directory is successful, defaults to True
-        :type add_number_if_dir_exists: bool, optional
-        :return: The path to the new directory
-        :rtype: str
-        
-        .. Warning:: 
-        
-            The ``add_number_if_dir_exists`` can be dangerous when this method is run inside
-            of a loop. This behavior may be deprecated and removed in the future.
-        """
-        dir_path = dir_path.rstrip("/")
-        if _counter==0:
-            new_dir_path = dir_path
-        else:
-            new_dir_path = dir_path + str(_counter)
-        
-        try:
-            os.makedirs(new_dir_path)
-        except FileExistsError:
-            if add_number_if_dir_exists: 
-                new_dir_path = FileIO.make_dir(dir_path, _counter = _counter+1)
-            else:
-                raise
-            
-        return new_dir_path

@@ -1020,37 +1020,6 @@ class TestFileIO():
             FileIO.save_np_array(arr, path)
         except FileExistsError:
             assert True
-        
-        
-    def test_dir_create(self):
-        FileIO.make_dir("./tmp_pytest/test_create")
-        assert os.path.exists("./tmp_pytest/test_create")
-        
-     
-    @pytest.mark.parametrize("path_in,counter,path_out",
-                        [("./tmp_pytest/test_recur", 0, "./tmp_pytest/test_recur1"),
-                        ("./tmp_pytest/test_recur_counter", 2, "./tmp_pytest/test_recur_counter2")]
-                        )   
-    def test_dir_create_recursive(self, path_in: str, counter: int, path_out: str):
-        os.mkdir(path_in)
-        FileIO.make_dir(path_in, add_number_if_dir_exists=True, _counter=counter)
-        assert os.path.exists(path_out)
-    
-    
-    @pytest.mark.parametrize("path_in,recursive,expected",
-                    [("./tmp_pytest/test_recur_out", False, "./tmp_pytest/test_recur_out"),
-                    ("./tmp_pytest/test_recur_out", True, "./tmp_pytest/test_recur_out1")]
-                    )  
-    def test_dir_create_return(self, path_in: str, recursive: bool, expected: str):
-        path_out: str = FileIO.make_dir(path_in, add_number_if_dir_exists=recursive)
-        assert path_out == expected
-    
-    
-    def test_dir_create_exception(self):
-        try:
-            FileIO.make_dir("./tmp_pytest/test_create")
-        except FileExistsError:
-            assert True
     
     
     @classmethod
