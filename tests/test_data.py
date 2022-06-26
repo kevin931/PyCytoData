@@ -714,12 +714,6 @@ class TestDataLoader():
                 tsv_writer.writerow(["B", "02"])
                 tsv_writer.writerow(["A", "02"])
         
-        # with open("./tmp_pytest/data/samusik/population_assignments.txt", "w") as f:
-        #     tsv_writer: "_csv._writer" = csv.writer(f, delimiter="\t")
-        #     tsv_writer.writerow(["a_a_a_01_a.fcs Event 000", "TypeA"])
-        #     tsv_writer.writerow(["a_a_a_01_a.fcs Event 001", "TypeB"])
-        #     tsv_writer.writerow(["a_a_a_02_a.fcs Event 000", "TypeA"])
-        
         
     def test_load_dataset_value_error(self):        
         try:
@@ -759,6 +753,19 @@ class TestDataLoader():
         assert None not in data.sample_index
         assert data.n_cells == 4
         assert data.n_channels == 3
+        
+        
+    def test_load_dataset_preprocess(self, mocker):
+        mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
+        mocker.patch("PyCytoData.DataLoader._data_path", {"levine13": "./tmp_pytest/data/" + "levine13/",
+                                                          "levine32": "./tmp_pytest/data/" + "levine32/",
+                                                          "samusik": "./tmp_pytest/data/" + "samusik/"})
+        mocker.patch("PyCytoData.DataLoader._data_status", {"levine13": True})
+        
+        data: PyCytoData = DataLoader.load_dataset(dataset="levine13", preprocess=True)
+        print(data.expression_matrix)
+        assert isinstance(data, PyCytoData)
+        assert np.isclose(data.expression_matrix[0,0], np.arcsinh(4.4/5))
        
         
     def test_load_dataset_no_cell_types(self, mocker): 

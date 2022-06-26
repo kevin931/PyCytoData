@@ -787,7 +787,7 @@ class DataLoader():
         _data_status[d] = os.path.exists(_data_path[d])
 
     @classmethod    
-    def load_dataset(cls, dataset: str, sample: Optional[ArrayLike]=None, force_download: bool = False) -> PyCytoData:
+    def load_dataset(cls, dataset: str, sample: Optional[ArrayLike]=None, force_download: bool = False, preprocess: bool=False) -> PyCytoData:
         """Load benchmark datasets.
 
         This methods downloads and load benchmark datasets. The dataset is downloaded only once, which is then
@@ -810,6 +810,10 @@ class DataLoader():
         :type sample: ArrayLike, optional
         :param force_download: Whether to download dataset regardless of previous cache, defaults to False
         :type force_download: bool
+        :param preprocess: Whether to automatically perform all the necessary preocessing, defaults to false. 
+            In the case of the existing three datasets, preprocessing includes just arcsinh transformation
+            with cofactor of 5.
+        :type preprocess: bool, optional
         :return: The loaded dataset.
         :rtype: PyCytoData
         """
@@ -850,6 +854,9 @@ class DataLoader():
         if metadata is not None:
             data.cell_types = metadata[:,0].flatten()
             data.sample_index = metadata[:,1].flatten()
+            
+        if preprocess:
+            data.preprocess(arcsinh=True, verbose=False)
             
         return data
             
