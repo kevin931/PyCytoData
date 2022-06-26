@@ -62,6 +62,10 @@ class PyCytoData():
         with the number of rows of the expression matrix.
     :raises exceptions.DimensionMismatchError: The number of sample indices does not agree
         with the number of rows of the expression matrix.
+        
+    :Additional Attributes:
+    
+    - **reductions**: A ``reductions`` object for dimension reduction using ``CytofDR``.
     """
     
     def __init__(self,
@@ -434,7 +438,7 @@ class PyCytoData():
         return self.expression_matrix[:, channel_indices], self.channels[channel_indices]
         
         
-    def __len__(self):
+    def __len__(self) -> int:
         """The length of the PyCytoData Class.
 
         This method implements the ``len`` of the builtin
@@ -475,7 +479,7 @@ class PyCytoData():
         return out_str
     
     
-    def __getitem__(self, items: Union[slice, List[int], np.ndarray, Tuple[Union[slice, List[int], np.ndarray], Union[slice, List[int], np.ndarray]]]):
+    def __getitem__(self, items: Union[slice, List[int], np.ndarray, Tuple[Union[slice, List[int], np.ndarray], Union[slice, List[int], np.ndarray]]]) -> PyCytoData:
         """The method to index elements of the PyCytoData object.
 
         This method implements the bracket notation to index part of the class.
@@ -765,6 +769,12 @@ class PyCytoData():
 
 
 class DataLoader():
+    """The class with utility functions to load datasets.
+
+    This class offers one public utility function to load datasets, ``load_dataset``,
+    which loads and preprocesses existing benchmark datasets. All other methods are
+    private methods. Instantiation is not necessary.
+    """
 
     # Package data directory and Path
     _data_dir = pkg_resources.resource_filename("PyCytoData", "data/")
@@ -1009,6 +1019,22 @@ class DataLoader():
 
 
 class FileIO():
+    """A utility class to handle common IO workflows for CyTOF data.
+
+    This class includes a few utility static methods to load and save
+    CyTOF data. Currently, it includes the following methods:
+    
+    - load_delim
+    - load_expression
+    - save_2d_list_to_csv
+    - save_np_array
+    - make_dir
+    
+    Most of the methods are wrappers, but we offer a few advantages, such
+    as returning ``PyCytoData`` data and saving ``numpy`` array along
+    with channel names. For detailed documentations, read the docstring
+    for each method.
+    """
     
     @staticmethod
     def load_delim(files: Union[List[str], str],
