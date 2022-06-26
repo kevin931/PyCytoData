@@ -168,7 +168,7 @@ class PyCytoData():
                    cor_channels: Optional[ArrayLike]=None,
                    dead_channel: Optional[ArrayLike]=None,
                    DNA_channels: Optional[ArrayLike]=None,
-                   cofactor: int=2,
+                   cofactor: int=5,
                    cutoff_DNA_sd: float=2,
                    dead_cutoff_quantile: float=0.03,
                    cor_cutoff_quantile: float=0.03,
@@ -209,6 +209,8 @@ class PyCytoData():
         :type dead_channel: ArrayLike, optional
         :param DNA_channels: The DNA channels as specify by name, defaults to None
         :type DNA_channels: ArrayLike, optional
+        :param cofactor: The cofactor for arcsinh transforatrion, default to 5.
+        :type cofactor: int, optional
         :param cutoff_DNA_sd: The standard deviation cutoff for DNA channels. Here, we
             specifically measure how many standard deviations away from the mean, defaults to 2
         :type cutoff_DNA_sd: float
