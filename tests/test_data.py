@@ -684,6 +684,8 @@ class TestDataLoader():
         os.makedirs("./tmp_pytest/data/levine13")
         os.makedirs("./tmp_pytest/data/levine32")
         os.makedirs("./tmp_pytest/data/samusik")
+        
+        cls.n_channels: Dict[str, int] = {"levine13": 13, "levine32": 40, "samusik": 50}
             
         for dataset in ["levine13", "levine32", "samusik"]:
             exprs_path_01: str = "./tmp_pytest/data/"+ dataset + "/" + dataset +"_01.txt"
@@ -691,28 +693,18 @@ class TestDataLoader():
             exprs_path_02: str = "./tmp_pytest/data/"+ dataset + "/" + dataset +"_02.txt"
             types_path_02: str = "./tmp_pytest/data/"+ dataset + "/" + dataset +"_metadata_02.txt"
             
-            with open(exprs_path_01, "w") as f:
-                tsv_writer: "_csv._writer" = csv.writer(f, delimiter="\t")
-                tsv_writer.writerow(["CD1", "CD2", "CD3"])
-                tsv_writer.writerow([4.4, 5.5, 6.6])
-                tsv_writer.writerow([1.2, 1.3, 1.4])
+            channels: np.ndarray = np.arange(cls.n_channels[dataset]).astype(str)
+            
+            if dataset == "levine13":
+                levine13: np.ndarray = np.random.rand(2, cls.n_channels[dataset])
+                levine13[0,0] = 4.4
+                FileIO.save_np_array(levine13, exprs_path_01, channels)
+            else:
+                FileIO.save_np_array(np.random.rand(2, cls.n_channels[dataset]), exprs_path_01, channels)
                 
-            with open(types_path_01, "w") as f:
-                tsv_writer: "_csv._writer" = csv.writer(f, delimiter="\t")
-                tsv_writer.writerow(["B", "01"])
-                tsv_writer.writerow(["A", "01"])
-                
-                
-            with open(exprs_path_02, "w") as f:
-                tsv_writer: "_csv._writer" = csv.writer(f, delimiter="\t")
-                tsv_writer.writerow(["CD1", "CD2", "CD3"])
-                tsv_writer.writerow([4.7, 5.8, 6.6])
-                tsv_writer.writerow([1.5, 1.3, 1.8])
-                
-            with open(types_path_02, "w") as f:
-                tsv_writer: "_csv._writer" = csv.writer(f, delimiter="\t")
-                tsv_writer.writerow(["B", "02"])
-                tsv_writer.writerow(["A", "02"])
+            FileIO.save_np_array(np.random.rand(2, cls.n_channels[dataset]), exprs_path_02, channels)
+            FileIO.save_np_array(np.array([["B", "01"],["A", "01"]]), types_path_01, dtype="%s")
+            FileIO.save_np_array(np.array([["B", "02"],["A", "02"]]), types_path_02, dtype="%s")
         
         
     def test_load_dataset_value_error(self):        
@@ -752,7 +744,7 @@ class TestDataLoader():
         assert None not in data.cell_types
         assert None not in data.sample_index
         assert data.n_cells == 4
-        assert data.n_channels == 3
+        assert data.n_channels == self.n_channels[dataset]
         
         
     def test_load_dataset_preprocess(self, mocker):
@@ -782,7 +774,7 @@ class TestDataLoader():
         assert isinstance(data, PyCytoData)
         assert None in data.cell_types
         assert data.n_cells == 2
-        assert data.n_channels == 3
+        assert data.n_channels == self.n_channels["levine13"]
         
         
     def test_load_dataset_sample_subset(self, mocker):
@@ -795,7 +787,7 @@ class TestDataLoader():
         data: PyCytoData = DataLoader.load_dataset(dataset="levine32", sample="01")
         assert isinstance(data, PyCytoData)
         assert data.n_cells == 2
-        assert data.n_channels == 3
+        assert data.n_channels == self.n_channels["levine32"]
         
     
     @pytest.mark.parametrize("force_download",
@@ -814,7 +806,7 @@ class TestDataLoader():
         assert isinstance(data, PyCytoData)
         assert None in data.cell_types
         assert data.n_cells == 2
-        assert data.n_channels == 3
+        assert data.n_channels == self.n_channels["levine13"]
         mock_download.assert_called_with(dataset="levine13", force_download=force_download)
         
         

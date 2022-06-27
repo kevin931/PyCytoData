@@ -113,6 +113,12 @@ class PyCytoData():
         if self._lineage_channels is not None and not np.all(np.isin(self._lineage_channels, self._channels)):
             raise ValueError("Some lineage channels are not listed in channel names.")
         
+        self._lineage_channels_indices: np.ndarray
+        if lineage_channels is None:
+            self._lineage_channels_indices = np.arange(self.n_channels)
+        else:
+            self._lineage_channels_indices = np.where(np.isin(lineage_channels, self.channels))
+        
         self._reductions: Optional[dr.Reductions] = None
     
     
@@ -328,10 +334,9 @@ class PyCytoData():
         if not OPT_PCK["CytofDR"]:
             raise ImportError("`CytofDR` is not installed. Please install `CytofDR` first.")
         
-        self.reductions = dr.run_dr_methods(data=self.expression_matrix, methods=methods, out_dims=out_dims,
+        self.reductions = dr.run_dr_methods(data=self.expression_matrix[:,self._lineage_channels_indices], methods=methods, out_dims=out_dims,
                                             n_jobs=n_jobs, verbose=verbose, suppress_error_msg=suppress_error_msg)
         
-        self.reductions.add_evaluation_metadata(original_data=self.expression_matrix)
         if np.any(self.cell_types != None):
             self.reductions.add_evaluation_metadata(original_cell_types=self.cell_types)
             
@@ -857,6 +862,11 @@ class DataLoader():
             data.cell_types = metadata[:,0].flatten()
             data.sample_index = metadata[:,1].flatten()
             
+        if dataset == "levine32":
+            data.lineage_channels = data.channels[4:36]
+        if dataset == "samusik":
+            data.lineage_channels = data.channels[8:47]
+            
         if preprocess:
             data.preprocess(arcsinh=True, verbose=False)
             
@@ -1037,7 +1047,6 @@ class FileIO():
     - load_expression
     - save_2d_list_to_csv
     - save_np_array
-    - make_dir
     
     Most of the methods are wrappers, but we offer a few advantages, such
     as returning ``PyCytoData`` data and saving ``numpy`` array along
