@@ -190,7 +190,6 @@ class PyCytoData():
         4. Gate for live cells.
         5. Gate for anomalies using center, offset, and residual channels. 
 
-        :param data: The expression matrix array of two dimensions.
         :param gate_debris_removal: Whether to gate to remove debris, defaults to True.
         :type gate_debris_removal: bool
         :param gate_intact_cells: Whether to gate for intact cells, defaults to True.
@@ -372,7 +371,7 @@ class PyCytoData():
         :return: A new PyCytoData after subsetting
         :rtype: PyCytoData, optional
         
-        :raises ValueErro: Filtering out all cells with nothing in the expression matrix, which is unsupported.
+        :raises ValueError: Filtering out all cells with nothing in the expression matrix, which is unsupported.
         """
         if sample is None and cell_types is None and channels is None:
             raise TypeError("'channels', 'sample', and 'cell_types' cannot all be None.")
@@ -744,7 +743,7 @@ class PyCytoData():
     def lineage_channels(self) -> Optional[np.ndarray]:
         """Getter for lineage_channels.
 
-        :return: An array of lineage channels or None.
+        :return: An array of lineage channels or ``None``.
         :rtype: np.ndarray, optional
         """
         return self._lineage_channels
@@ -765,11 +764,22 @@ class PyCytoData():
         
     @property
     def reductions(self) -> Optional[dr.Reductions]:
+        """Getter for reductions.
+
+        :return: A ``Reductions`` object or ``None``.
+        :rtype: CytofDR.dr.Reductions, optional
+        """
         return self._reductions
     
     
     @reductions.setter
     def reductions(self, reductions: Optional[dr.Reductions]):
+        """Set reductions.
+
+        :param reductions: A ``Reductions`` object from the ``CytofDR`` package.
+        :type reductions: int
+        :raises TypeError: The object is not a ``Reductions`` object.
+        """
         if not isinstance(reductions, dr.Reductions) and reductions is not None:
             raise TypeError("'reductions' has to of type 'CytofDR.dr.Reductions' or None")
         self._reductions = reductions
@@ -1133,7 +1143,7 @@ class FileIO():
         :type files: Union[List[str], str]
         :param col_names: Whether the first row is channel names, default to False.
         :type col_names: bool, optional
-        :param drop_colums: The columns indices for those that need to be dropped, defaults to None.
+        :param drop_columns: The columns indices for those that need to be dropped, defaults to None.
         :type drop_columns: Union[int, List[int]], optional.
         :param delim: The delimiter to use, defaults to ``\\t``
         :type delim: str, optional.
@@ -1178,7 +1188,7 @@ class FileIO():
         :param path: Path to save the CSV file
         :type path: str
         
-        ..note:: 
+        .. note:: 
         
             By default, this method does not overwrite existing files. In case a file exists,
             a ``FileExistsError`` is thrown.
