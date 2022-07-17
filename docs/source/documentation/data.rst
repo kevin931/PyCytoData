@@ -4,6 +4,7 @@ Module: PyCytoData.data
 .. autoclass:: PyCytoData.data.PyCytoData
     :members:
     :undoc-members: 
+    :special-members:
     :show-inheritance:
 
 .. autoclass:: PyCytoData.data.DataLoader

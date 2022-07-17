@@ -2,6 +2,8 @@
 Releases
 ##########
 
+Here we include our release notes for past releases in sequential order.
+
 ------------------
 
 ********

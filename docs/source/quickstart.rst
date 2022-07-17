@@ -111,7 +111,8 @@ And of course, if you don't have the first row as channel names, you can turn th
     >>> exprs = FileIO.load_expression("Your_File_Path", col_names = False)
 
 In this case, no channel names will be stored. For more in-depth guide on IO and all its
-functionalities, please head to the tutorials section and read the `IO Guide <>`_.
+functionalities, please head to the tutorials section and read the
+`IO Guide <https://pycytodata.readthedocs.io/en/latest/tutorial/fileio.html>`_.
 
 
 ---------------------------
@@ -186,10 +187,10 @@ The constructor is very easy to use:
 
     >>> from PyCytoData import PyCytoData
     >>> exprs = PyCytoData(expression_matrix = expression_matrix,
-                           channels = channels,
-                           cell_types = cell_types,
-                           sample_index = sample_index,
-                           lineage_channels = lineage_channels)
+    ...                    channels = channels,
+    ...                    cell_types = cell_types,
+    ...                    sample_index = sample_index,
+    ...                    lineage_channels = lineage_channels)
 
 All the parameters are self-explanatory as well! The only thing that you may be
 unfamiliar with is ``lineage_channels``, which delineates actual lineage channels
@@ -224,7 +225,7 @@ These are the six steps if you choose to do everything, but you can of course pi
 It also depends the dataset you have: if your dataset doesn't have a lot of
 instrument channels, it's likely been processed already! We detect these channels
 automatically. For more details on each preprocessing step, go look at our
-`CyTOF Data Preprocessing <>`_ page.
+`CyTOF Data Preprocessing <https://pycytodata.readthedocs.io/en/latest/tutorial/preprocessing.html>`_ page.
 
 ------------------------------
 

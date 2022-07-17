@@ -4,35 +4,36 @@ References
 
 If you use ``PyCytoData`` to perform DR, citing the [our DR Review paper](https://doi.org/10.1101/2022.04.26.489549) is highly appreciated:
 
-```
-@article {Wang2022.04.26.489549,
-	author = {Wang, Kaiwen and Yang, Yuqiu and Wu, Fangjiang and Song, Bing and Wang, Xinlei and Wang, Tao},
-	title = {Comparative Analysis of Dimension Reduction Methods for Cytometry by Time-of-Flight Data},
-	elocation-id = {2022.04.26.489549},
-	year = {2022},
-	doi = {10.1101/2022.04.26.489549},
-	publisher = {Cold Spring Harbor Laboratory},
-	URL = {https://www.biorxiv.org/content/early/2022/06/02/2022.04.26.489549},
-	eprint = {https://www.biorxiv.org/content/early/2022/06/02/2022.04.26.489549.full.pdf},
-	journal = {bioRxiv}
-}
-```
+.. code-block::
+
+	@article {Wang2022.04.26.489549,
+		author = {Wang, Kaiwen and Yang, Yuqiu and Wu, Fangjiang and Song, Bing and Wang, Xinlei and Wang, Tao},
+		title = {Comparative Analysis of Dimension Reduction Methods for Cytometry by Time-of-Flight Data},
+		elocation-id = {2022.04.26.489549},
+		year = {2022},
+		doi = {10.1101/2022.04.26.489549},
+		publisher = {Cold Spring Harbor Laboratory},
+		URL = {https://www.biorxiv.org/content/early/2022/06/02/2022.04.26.489549},
+		eprint = {https://www.biorxiv.org/content/early/2022/06/02/2022.04.26.489549.full.pdf},
+		journal = {bioRxiv}
+	}
 
 If you use ``Cytomulate`` with this package, [our paper](https://doi.org/10.1101/2022.06.14.496200) can be cited here:
 
-```
-@article {Yang2022.06.14.496200,
-	author = {Yang, Yuqiu and Wang, Kaiwen and Lu, Zeyu and Wang, Tao and Wang, Xinlei},
-	title = {Cytomulate: Accurate and Efficient Simulation of CyTOF data},
-	elocation-id = {2022.06.14.496200},
-	year = {2022},
-	doi = {10.1101/2022.06.14.496200},
-	publisher = {Cold Spring Harbor Laboratory},
-	URL = {https://www.biorxiv.org/content/early/2022/06/16/2022.06.14.496200},
-	eprint = {https://www.biorxiv.org/content/early/2022/06/16/2022.06.14.496200.full.pdf},
-	journal = {bioRxiv}
-}
-```
+.. code-block:: 
+
+	@article {Yang2022.06.14.496200,
+		author = {Yang, Yuqiu and Wang, Kaiwen and Lu, Zeyu and Wang, Tao and Wang, Xinlei},
+		title = {Cytomulate: Accurate and Efficient Simulation of CyTOF data},
+		elocation-id = {2022.06.14.496200},
+		year = {2022},
+		doi = {10.1101/2022.06.14.496200},
+		publisher = {Cold Spring Harbor Laboratory},
+		URL = {https://www.biorxiv.org/content/early/2022/06/16/2022.06.14.496200},
+		eprint = {https://www.biorxiv.org/content/early/2022/06/16/2022.06.14.496200.full.pdf},
+		journal = {bioRxiv}
+	}
+
 
 If you use the builtin datasets, please visit our [Reference Page](https://pycytodata.readthedocs.io/en/latest/references.html) and cite the papers accordingly.
 
