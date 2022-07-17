@@ -13,13 +13,11 @@ To get started, you can reference this quick example:
 .. code-block:: python
 
    >>> from PyCytoData import DataLoader
-   >>> exprs = DataLoader.load_dataset(dataset = "levine13")
+   >>> exprs = DataLoader.load_dataset(dataset = "levine13", preprocess=True)
    Would you like to download levine13? [y/n]y
 
    Download in progress...
    This may take quite a while, go grab a coffee or cytomulate it!
-   >>> exprs.preprocess(arcsinh=True)
-   Runinng Arcsinh transformation...
    >>>  exprs.run_dr_methods(methods = ["PCA", "UMAP", "ICA"])
    Running PCA
    Running ICA
