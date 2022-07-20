@@ -112,7 +112,7 @@ When you perform BYOD, you can have much more flexibility:
 ...                 gate_center_offset_residual=True,
 ...                 bead_normalization=True)
 
-byod.expression_matrix # This is preprocessed
+>>> byod.expression_matrix # This is preprocessed
 ```
 As the example shows, we support five unique preprocessing steps! And of course, you can use a subset of these to suit your own needs! By default, we automatically detect the necessary channels, such as "Bead1" or "Center". However, if your dataset is unconventionally named, our auto-detect algorithm may fail. Thus, we can perform a manual override:
 
