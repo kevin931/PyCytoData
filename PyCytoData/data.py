@@ -290,7 +290,7 @@ class PyCytoData():
             indices = indices[indices_temp]
             
         if bead_normalization:
-            _verbose("Runinng bead normalization...", verbose=verbose)
+            _verbose("Running bead normalization...", verbose=verbose)
             assert bead_channels is not None
             assert time_channel is not None
             assert self.lineage_channels is not None
