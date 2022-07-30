@@ -3,8 +3,7 @@ Module: PyCytoData.data
 
 .. autoclass:: PyCytoData.data.PyCytoData
     :members:
-    :undoc-members: 
-    :special-members:
+    :special-members: __str__, __len__, __getitem__, __add__, __iadd__
     :show-inheritance:
 
 .. autoclass:: PyCytoData.data.DataLoader
