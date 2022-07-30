@@ -458,6 +458,19 @@ class PyCytoData():
     
     
     def __iadd__(self, new_object: PyCytoData) -> PyCytoData:
+        """Concatenate a new `PyCytoData` object with the `+=` operator.
+
+        This essentially works the same way the ``add_sample`` method. However,
+        instead of the necessity of providing the expression matrices, sample
+        indices, and the cell types manually, the concatenation is automatically
+        performed from a new `PyCytoData` object.
+
+        :param new_object: The second `PyCytoData` object.
+        :type new_object: PyCytoData
+        :raises TypeError: The provided object is not a `PyCytoData` object.
+        :return: A new `PyCytoData` object after concatenation.
+        :rtype: PyCytoData
+        """
         if not isinstance(new_object, PyCytoData):
             raise TypeError("The right hand side has to be a 'PyCytoData' object.")
         self.add_sample(new_object.expression_matrix, sample_index=new_object.sample_index, cell_types=new_object.cell_types)
@@ -465,6 +478,17 @@ class PyCytoData():
     
     
     def __add__(self, new_object: PyCytoData) -> PyCytoData:
+        """Concatenate two `PyCytoData` objects with the `+` operator.
+
+        This method concatenates two `PyCytOData` objects together by using
+        the `add_sample` method internally. A new `PyCytoData` object is returned.
+
+        :param new_object: The second `PyCytoData` object.
+        :type new_object: PyCytoData
+        :raises TypeError: The provided object is not a `PyCytoData` object.
+        :return: A new `PyCytoData` object after concatenation.
+        :rtype: PyCytoData
+        """
         if not isinstance(new_object, PyCytoData):
             raise TypeError("The right hand side has to be a 'PyCytoData' object.")
         out_object = deepcopy(self)
