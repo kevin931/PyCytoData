@@ -822,10 +822,7 @@ class DataLoader():
     _data_path: Dict[str, str] = {"levine13": _data_dir + "levine13/",
                                   "levine32": _data_dir + "levine32/",
                                   "samusik": _data_dir + "samusik/"}
-    # Check data status
-    _data_status: Dict[str, bool] = {}
-    for d in _data_path.keys():
-        _data_status[d] = os.path.exists(_data_path[d])
+
 
     @classmethod    
     def load_dataset(cls, dataset: str, sample: Optional[ArrayLike]=None, force_download: bool = False, preprocess: bool=False) -> PyCytoData:
@@ -862,8 +859,8 @@ class DataLoader():
         dataset = dataset.lower()
         if dataset not in ["levine13", "levine32", "samusik"]:
             raise ValueError("Unsupported dataset: Have to be 'levine13', 'levine32', or 'samusik'.")
-        
-        if not cls._data_status[dataset]:
+                
+        if not os.path.exists(cls._data_path[dataset]):
             cls._download_data(dataset = dataset, force_download = force_download)
             
         if sample is not None and not isinstance(sample, np.ndarray):
