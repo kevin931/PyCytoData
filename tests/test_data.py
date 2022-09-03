@@ -708,6 +708,11 @@ class TestDataLoader():
             FileIO.save_np_array(np.array([["B", "02"],["A", "02"]]), types_path_02, dtype="%s")
         
         
+    def test_saved_array(self):
+        dataset = "levine13"
+        df = FileIO.load_expression("./tmp_pytest/data/"+ dataset + "/" + dataset +"_01.txt")
+        print(df.expression_matrix)
+        
     def test_load_dataset_value_error(self):        
         try:
             DataLoader.load_dataset(dataset="levine14")
