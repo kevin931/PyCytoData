@@ -698,6 +698,7 @@ class TestDataLoader():
             if dataset == "levine13":
                 levine13: np.ndarray = np.random.rand(2, cls.n_channels[dataset])
                 levine13[0,0] = 4.4
+                print(levine13)
                 FileIO.save_np_array(levine13, exprs_path_01, channels)
             else:
                 FileIO.save_np_array(np.random.rand(2, cls.n_channels[dataset]), exprs_path_01, channels)
