@@ -140,6 +140,27 @@ a normalization procedure in place (nor do we have packages in the PyCytoData al
 that fills the role). If you need this preprocessing step done, some other packages may be
 needed! 
 
+Remove Cached Datasets
+------------------------
+
+As previously mentioned, we cache all datasets downloaded in the package. However, in certain circumstances,
+you may want to remove such cache (e.g. Managing many virtual environments or system storage is running low).
+In this case, we offer a clean interface to remove the cache safely: 
+
+.. code-block:: python
+
+    >>> DataLoader.purge_dataset_cache(dataset="levine13")
+
+which will remove the ``Levine13`` dataset and all its metadata automatically. You can specify the dataset
+of your choice, but you won't be able to remove specific samples only.
+
+If you want to remove all benchmark datasets, you can run the following command:
+
+.. code-block:: python
+
+    >>> DataLoader.purge_dataset_cache_all()
+
+This will remove all datasets as requested.
 
 --------------------------
 

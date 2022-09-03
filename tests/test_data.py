@@ -872,6 +872,34 @@ class TestDataLoader():
         zip_mock.extractall.assert_called_once()
         contents_mock.read.assert_called_once()
         assert out == 0
+        
+        
+    def test_purge_dataset_cache(self, mocker):
+        mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
+        mocker.patch("PyCytoData.DataLoader._data_path", {"levine13": "./tmp_pytest/data/" + "levine13/",
+                                                          "levine32": "./tmp_pytest/data/" + "levine32/",
+                                                          "samusik": "./tmp_pytest/data/" + "samusik/"})
+        DataLoader.purge_dataset_cache(dataset="levine13")
+        assert not os.path.exists("./tmp_pytest/data/levine13")
+        
+        
+    def test_purge_dataset_cache_all(self, mocker):
+        mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
+        mocker.patch("PyCytoData.DataLoader._data_path", {"levine13": "./tmp_pytest/data/" + "levine13/",
+                                                          "levine32": "./tmp_pytest/data/" + "levine32/",
+                                                          "samusik": "./tmp_pytest/data/" + "samusik/"})
+        DataLoader.purge_dataset_cache_all()
+        assert not os.path.exists("./tmp_pytest/data/levine32")
+        assert not os.path.exists("./tmp_pytest/data/samusik")
+        
+        
+    def test_purge_dataset_cache_value_error(self):
+        try:
+            DataLoader.purge_dataset_cache(dataset="WrongDataset")
+        except ValueError as e:
+            assert str(e) == "Unsupported dataset: Have to be 'levine13', 'levine32', or 'samusik'."
+        else:
+            assert False
     
     
     @classmethod

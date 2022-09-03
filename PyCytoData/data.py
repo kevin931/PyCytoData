@@ -1,4 +1,5 @@
 from __future__ import annotations
+import shutil
 
 import pandas as pd
 import numpy as np
@@ -902,6 +903,39 @@ class DataLoader():
             data.preprocess(arcsinh=True, verbose=False)
             
         return data
+    
+    
+    @classmethod    
+    def purge_dataset_cache(cls, dataset: str) -> None:
+        """Delete the cached benchmark datasets.
+
+        This method permanently deletes the datasets downloaded and cached with the ``load_dataset``
+        method. Currently, it supports only the three benchmark datasets: ``levine13``, ``levine32``,
+        and ``samusik``. Once deleted, the dataset has to be downloaded again in the future if needed.
+        However, performing this operation will free up storage space for one-time usages.
+        
+        Currently, we do not support deleting only specific samples.
+
+        :param dataset: The benchmark dataset name: ``levine13``, ``levine32``, ``samusik``.
+        :type dataset: str
+        """
+        
+        dataset = dataset.lower()
+        if dataset not in ["levine13", "levine32", "samusik"]:
+            raise ValueError("Unsupported dataset: Have to be 'levine13', 'levine32', or 'samusik'.")
+        
+        shutil.rmtree(cls._data_path[dataset]) 
+                
+    
+    @classmethod    
+    def purge_dataset_cache_all(cls) -> None:
+        """Delete the cached benchmark datasets.
+
+        This method permanently deletes **all** the datasets downloaded and cached with the ``load_dataset``
+        method. Once deleted, the dataset has to be downloaded again in the future if needed. However,
+        performing this operation will free up storage space for one-time usages.
+        """
+        shutil.rmtree(cls._data_dir)
             
 
     @classmethod
