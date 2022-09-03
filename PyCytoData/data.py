@@ -867,6 +867,7 @@ class DataLoader():
             sample = np.array(sample).flatten()
             
         all_files = glob.glob(cls._data_path[dataset]+dataset+"*.txt")
+        print(all_files)
         files: List[str] = []
         metadata_files: List[str] = []
         for f in all_files:
@@ -878,7 +879,10 @@ class DataLoader():
         if sample is not None:
             r = re.compile("(.*" + ".*)|(.*".join(sample) + ".*)")
             files = list(filter(r.match, files))
-            metadata_files = list(filter(r.match, metadata_files))         
+            metadata_files = list(filter(r.match, metadata_files))  
+            
+        print(files)
+        print(metadata_files)       
             
         data: PyCytoData = FileIO.load_expression(files=files, col_names = True)
         metadata: Optional[np.ndarray] = None
