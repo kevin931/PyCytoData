@@ -867,6 +867,7 @@ class DataLoader():
             sample = np.array(sample).flatten()
             
         all_files = glob.glob(cls._data_path[dataset]+dataset+"*.txt")
+        all_files = sorted(all_files)
         print(all_files)
         files: List[str] = []
         metadata_files: List[str] = []
