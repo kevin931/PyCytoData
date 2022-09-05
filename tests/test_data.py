@@ -758,12 +758,7 @@ class TestDataLoader():
                                                           "levine32": "./tmp_pytest/data/" + "levine32/",
                                                           "samusik": "./tmp_pytest/data/" + "samusik/"})
         
-        dataset = "levine13"
-        df = FileIO.load_expression("./tmp_pytest/data/"+ dataset + "/" + dataset +"_01.txt")
-        print(df.expression_matrix)
-        
         data: PyCytoData = DataLoader.load_dataset(dataset="levine13", preprocess=True)
-        print(data.expression_matrix)
         assert isinstance(data, PyCytoData)
         assert np.isclose(data.expression_matrix[0,0], np.arcsinh(4.4/5))
        
