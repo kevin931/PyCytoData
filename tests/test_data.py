@@ -980,7 +980,7 @@ class TestFileIO():
     def test_load_delim_drop_col(self, drop_cols, expected_shape):
         path: str = "./tmp_pytest/file_read_test_csv.txt"
         out_file: Union[np.ndarray, Tuple[np.ndarray, np.ndarray]] = FileIO.load_delim(path,
-                                                                                       True,
+                                                                                       1,
                                                                                        drop_columns=drop_cols,
                                                                                        delim=",",
                                                                                        dtype = int,
