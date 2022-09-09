@@ -1,3 +1,5 @@
+![Logo](./assets/pycytodata.jpg)
+
 # PyCytoData
 > An elegant data analysis tool for CyTOF.
 

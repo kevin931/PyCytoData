@@ -41,11 +41,13 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
+html_logo = "../../assets/pycytodata.jpg"
 html_theme_options = {
     'collapse_navigation': False,
     'sticky_navigation': True,
     'navigation_depth': 4,
     'includehidden': True,
+    'logo_only': True,
     'titles_only': True
 }
 
