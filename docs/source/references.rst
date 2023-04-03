@@ -21,7 +21,7 @@ can be cited here:
 
 
 
-If you use ``PyCytoData`` to perform DR with ``CytofDR``, citing the `our DR Review paper <https://www.nature.com/articles/s41467-023-37478-w>`_ is highly appreciated:
+If you use ``PyCytoData`` to perform DR with ``CytofDR``, citing the `our DR Review paper <https://doi.org/10.1038/s41467-023-37478-w>`_ is highly appreciated:
 
 .. code-block::
 

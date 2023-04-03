@@ -202,7 +202,7 @@ If you used ``PyCytoData`` in your research or with ``Cytomulate`` as part of th
 }
 ```
 
-If you use ``PyCytoData`` to perform DR, citing the [our DR Review paper](https://www.nature.com/articles/s41467-023-37478-w) is highly appreciated:
+If you use ``PyCytoData`` to perform DR, citing the [our DR Review paper](https://doi.org/10.1038/s41467-023-37478-w) is highly appreciated:
 
 ```
 Wang, K., Yang, Y., Wu, F. et al. Comparative analysis of dimension reduction methods for cytometry by time-of-flight data. Nat Commun 14, 1836 (2023). https://doi.org/10.1038/s41467-023-37478-w
