@@ -2,23 +2,8 @@
 References
 ################
 
-If you use ``PyCytoData`` to perform DR, citing the [our DR Review paper](https://doi.org/10.1101/2022.04.26.489549) is highly appreciated:
-
-.. code-block::
-
-	@article {Wang2022.04.26.489549,
-		author = {Wang, Kaiwen and Yang, Yuqiu and Wu, Fangjiang and Song, Bing and Wang, Xinlei and Wang, Tao},
-		title = {Comparative Analysis of Dimension Reduction Methods for Cytometry by Time-of-Flight Data},
-		elocation-id = {2022.04.26.489549},
-		year = {2022},
-		doi = {10.1101/2022.04.26.489549},
-		publisher = {Cold Spring Harbor Laboratory},
-		URL = {https://www.biorxiv.org/content/early/2022/06/02/2022.04.26.489549},
-		eprint = {https://www.biorxiv.org/content/early/2022/06/02/2022.04.26.489549.full.pdf},
-		journal = {bioRxiv}
-	}
-
-If you use ``Cytomulate`` with this package, [our paper](https://doi.org/10.1101/2022.06.14.496200) can be cited here:
+If you used ``PyCytoData`` as part of your research or used ``Cytomulate`` with this package, `our paper <https://doi.org/10.1101/2022.06.14.496200>`_
+can be cited here:
 
 .. code-block:: 
 
@@ -35,7 +20,33 @@ If you use ``Cytomulate`` with this package, [our paper](https://doi.org/10.1101
 	}
 
 
-If you use the builtin datasets, please visit our [Reference Page](https://pycytodata.readthedocs.io/en/latest/references.html) and cite the papers accordingly.
+
+If you use ``PyCytoData`` to perform DR with ``CytofDR``, citing the `our DR Review paper <https://www.nature.com/articles/s41467-023-37478-w>`_ is highly appreciated:
+
+.. code-block::
+
+	Wang, K., Yang, Y., Wu, F. et al. Comparative analysis of dimension reduction methods for cytometry by time-of-flight data. Nat Commun 14, 1836 (2023).
+	https://doi.org/10.1038/s41467-023-37478-w
+
+
+or
+
+
+.. code-block::
+
+	@article{crameri2020misuse,
+		title={Comparative analysis of dimension reduction methods for cytometry by time-of-flight data},
+		author={Wang, Kaiwen and Yang, Yuqiu and Wu, Fangjiang and Song, Bing and Wang, Xinlei and Wang, Tao},
+		journal={Nature communications},
+		volume={14},
+		number={1},
+		pages={1836},
+		year={2023},
+		publisher={Nature Publishing Group UK London}
+	}
+
+
+If you use the builtin datasets, please visit our `Reference Page <https://pycytodata.readthedocs.io/en/latest/references.html>`_ and cite the papers accordingly.
 
 --------------------------
 
