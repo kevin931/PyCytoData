@@ -186,23 +186,7 @@ This is the first official release of ``PyCytoData`` with LTS.
 
 ## References
 
-If you use ``PyCytoData`` to perform DR, citing the [our DR Review paper](https://doi.org/10.1101/2022.04.26.489549) is highly appreciated:
-
-```
-@article {Wang2022.04.26.489549,
-	author = {Wang, Kaiwen and Yang, Yuqiu and Wu, Fangjiang and Song, Bing and Wang, Xinlei and Wang, Tao},
-	title = {Comparative Analysis of Dimension Reduction Methods for Cytometry by Time-of-Flight Data},
-	elocation-id = {2022.04.26.489549},
-	year = {2022},
-	doi = {10.1101/2022.04.26.489549},
-	publisher = {Cold Spring Harbor Laboratory},
-	URL = {https://www.biorxiv.org/content/early/2022/06/02/2022.04.26.489549},
-	eprint = {https://www.biorxiv.org/content/early/2022/06/02/2022.04.26.489549.full.pdf},
-	journal = {bioRxiv}
-}
-```
-
-If you use ``Cytomulate`` with this package, [our paper](https://doi.org/10.1101/2022.06.14.496200) can be cited here:
+If you used ``PyCytoData`` in your research or with ``Cytomulate`` as part of the pipeline, please cite [our paper](https://doi.org/10.1101/2022.06.14.496200) here:
 
 ```
 @article {Yang2022.06.14.496200,
@@ -215,6 +199,27 @@ If you use ``Cytomulate`` with this package, [our paper](https://doi.org/10.1101
 	URL = {https://www.biorxiv.org/content/early/2022/06/16/2022.06.14.496200},
 	eprint = {https://www.biorxiv.org/content/early/2022/06/16/2022.06.14.496200.full.pdf},
 	journal = {bioRxiv}
+}
+```
+
+If you use ``PyCytoData`` to perform DR, citing the [our DR Review paper](https://doi.org/10.1038/s41467-023-37478-w) is highly appreciated:
+
+```
+Wang, K., Yang, Y., Wu, F. et al. Comparative analysis of dimension reduction methods for cytometry by time-of-flight data. Nat Commun 14, 1836 (2023). https://doi.org/10.1038/s41467-023-37478-w
+```
+
+or
+
+```
+@article{crameri2020misuse,
+  title={Comparative analysis of dimension reduction methods for cytometry by time-of-flight data},
+  author={Wang, Kaiwen and Yang, Yuqiu and Wu, Fangjiang and Song, Bing and Wang, Xinlei and Wang, Tao},
+  journal={Nature communications},
+  volume={14},
+  number={1},
+  pages={1836},
+  year={2023},
+  publisher={Nature Publishing Group UK London}
 }
 ```
 
