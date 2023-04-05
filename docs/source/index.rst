@@ -64,7 +64,9 @@ tutorials below! Enjoy your journey working with CyTOF datasets!
    :caption: Resources
 
    references
-   Dr. Xinlei (Shery) Wang <https://people.smu.edu/swang/>
+   Our Paper (Cytomulate) <https://doi.org/10.1101/2022.06.14.496200>
+   CyTOF DR Review (CytofDR) <https://doi.org/10.1038/s41467-023-37478-w>
+   Dr. Xinlei (Shery) Wang <https://www.uta.edu/academics/faculty/profile?username=wangx9>
    Dr. Tao Wang <https://qbrc.swmed.edu/labs/wanglab/aboutpi.php>
    DBAI <https://dbai.biohpc.swmed.edu/>
    GitHub <https://github.com/kevin931/PyCytoData/>
@@ -77,7 +79,9 @@ Resources
 
 For more resources on our labs, collaborators, and related projects, please visit the following:
 
-   * `Dr. Xinlei (Shery) Wang faculty page <https://people.smu.edu/swang/>`_
+   * `Our Paper (Cytomulate) <https://doi.org/10.1101/2022.06.14.496200>`_
+   * `DR Review Paper (CytofDR) <https://doi.org/10.1038/s41467-023-37478-w>`_
+   * `Dr. Xinlei (Shery) Wang faculty page <https://www.uta.edu/academics/faculty/profile?username=wangx9>`_
    * `Dr. Tao Wang Lab <https://qbrc.swmed.edu/labs/wanglab/aboutpi.php>`_
    * `Database for Actionable Immunology (DBAI) for more computational immunology-related tools <https://dbai.biohpc.swmed.edu/>`_
    * `GitHub Page for project development <https://github.com/kevin931/PyCytoData/>`_ 
