@@ -186,7 +186,7 @@ This is the first official release of ``PyCytoData`` with LTS.
 
 ## References
 
-If you used ``PyCytoData`` in your research or with ``Cytomulate`` as part of the pipeline, please cite [our paper](https://doi.org/10.1101/2022.06.14.496200) can here:
+If you used ``PyCytoData`` in your research or with ``Cytomulate`` as part of the pipeline, please cite [our paper](https://doi.org/10.1101/2022.06.14.496200) here:
 
 ```
 @article {Yang2022.06.14.496200,
