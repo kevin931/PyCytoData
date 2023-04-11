@@ -62,6 +62,7 @@ tutorials below! Enjoy your journey working with CyTOF datasets!
 .. toctree::
    :maxdepth: 1
    :caption: Resources
+   :hidden:
 
    references
    Our Paper (Cytomulate) <https://doi.org/10.1101/2022.06.14.496200>
@@ -80,7 +81,7 @@ Resources
 For more resources on our labs, collaborators, and related projects, please visit the following:
 
    * `Our Paper (Cytomulate) <https://doi.org/10.1101/2022.06.14.496200>`_
-   * `DR Review Paper (CytofDR) <https://doi.org/10.1038/s41467-023-37478-w>`_
+   * `CyTOF DR Review Paper (CytofDR) <https://doi.org/10.1038/s41467-023-37478-w>`_
    * `Dr. Xinlei (Shery) Wang faculty page <https://www.uta.edu/academics/faculty/profile?username=wangx9>`_
    * `Dr. Tao Wang Lab <https://qbrc.swmed.edu/labs/wanglab/aboutpi.php>`_
    * `Database for Actionable Immunology (DBAI) for more computational immunology-related tools <https://dbai.biohpc.swmed.edu/>`_
