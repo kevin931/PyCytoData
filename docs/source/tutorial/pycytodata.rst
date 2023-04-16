@@ -341,8 +341,8 @@ object:
 
 .. code-block:: python
 
-    >>> exprs1 = exprs = DataLoader.load_dataset(dataset="levine32", sample="AML08")
-    >>> exprs2 = exprs = DataLoader.load_dataset(dataset="levine32", sample="AML09")
+    >>> exprs1 = DataLoader.load_dataset(dataset="levine32", sample="AML08")
+    >>> exprs2 = DataLoader.load_dataset(dataset="levine32", sample="AML09")
     >>> exprs = exprs1 + exprs2
     >>> print(exprs)
     A 'PyCytoData' object with 265627 cells, 39 channels, 15 cell types, and 2 samples at 0x7fbf313f7190.
