@@ -20,8 +20,8 @@ What should happen ideally?
  - OS: [e.g. Windows 11]
  - Python Version: [e.g. 3.9.0]
  - Python Distribution: [e.g. Anaconda]
- - cytomulate version: [e.g. 1.0.0]
- - cytomulate distribution: [e.g. PyPI]
+ - PyCytoData version: [e.g. 1.0.0]
+ - PyCytoData distribution: [e.g. PyPI]
 
 **Additional context**
 What other information will help us to resolve this issue for you?
