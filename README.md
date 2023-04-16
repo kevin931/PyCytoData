@@ -211,13 +211,13 @@ Wang, K., Yang, Y., Wu, F. et al. Comparative analysis of dimension reduction me
 or
 
 ```
-@article{crameri2020misuse,
+@article{wang2023comparative,
   title={Comparative analysis of dimension reduction methods for cytometry by time-of-flight data},
   author={Wang, Kaiwen and Yang, Yuqiu and Wu, Fangjiang and Song, Bing and Wang, Xinlei and Wang, Tao},
   journal={Nature communications},
   volume={14},
   number={1},
-  pages={1836},
+  pages={1--18},
   year={2023},
   publisher={Nature Publishing Group UK London}
 }
