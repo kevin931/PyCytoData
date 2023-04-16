@@ -291,6 +291,8 @@ def bead_normalization(data: ArrayLike, channels: ArrayLike, bead_channels: Arra
     intervals: np.ndarray = np.round(data[:,np.isin(channels, time_channel)]/np.max(data[:,np.isin(channels, time_channel)])*200).flatten() # type: ignore
     unique_intervals: np.ndarray = np.unique(intervals)
     interval_mean: np.ndarray = np.empty((unique_intervals.shape[0], data.shape[1]), dtype=float) # type: ignore
+    for i in range(0, unique_intervals.shape[0]):
+        interval_mean[i] = np.mean(data[np.isin(intervals, unique_intervals[i]),:], axis=0)
     
     for c in bead_channels:
         data[:,np.isin(channels, c)] = data[:, np.isin(channels, c)]/np.mean(data[:, np.isin(channels, c)]) #type: ignore
