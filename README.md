@@ -161,27 +161,22 @@ For detailed documentation along with tutorials and API Reference, please visit 
 
 If you prefer to build documentation on your own, refer to [this guide](https://pycytodata.readthedocs.io/en/latest/change/build.html) for more details.
 
-## Latest Release: 0.1.0
+## Latest Release: 0.1.1
 
-This is the first official release of ``PyCytoData`` with LTS.
+This is a minor release with various bug fixes and documentation improvents.
 
 ### Bug Fixes
 
-- Fix the default cofactor of ``PyCytoData.preprocess``
-- Fix lineage channels for ``levine32`` and ``samusik``
+- Fixed a potential issue with loading benchmark datasets' samples out of order (This behavior is not guaranteed, but a implementation detail)
+- Fixed an issue with ``DataLoader.load_dataset`` not recognizing downloaded datasets
+- Fixed an issue with ``preprocess.bead_normalization`` having uninitialized array (#9)
 
 ### Changes and New Features
 
-- ``PyCytoData.run_dr_methods`` now runs on lineage channels only
-- Add tutorials and references for documentation
-- Improve docstrings and general documentations
-- Add preprocessing options for loading benchmark datasets
-- Relax ``numpy`` dependency to >=1.20
-- Add descriptors for PyPI releases
-
-### Deprecations
-
-- Permanently remove ``FileIO.make_dir`` function for safety reasons
+- No new feature added
+- Improved documentations with streamlined front page and updated links
+- Added docstrings for `+` and `+=` operators
+- Updated references for CytofDR paper publication in Nature Communications
 
 
 ## References

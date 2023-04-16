@@ -7,6 +7,30 @@ Here we include our release notes for past releases in sequential order.
 ------------------
 
 ********
+v0.1.1
+********
+
+This is a minor release with various bug fixes and documentation improvents.
+
+Bug Fixes
+-----------
+
+- Fixed a potential issue with loading benchmark datasets' samples out of order (This behavior is not guaranteed, but a implementation detail)
+- Fixed an issue with ``DataLoader.load_dataset`` not recognizing downloaded datasets
+- Fixed an issue with ``preprocess.bead_normalization`` having uninitialized array (#9)
+
+
+Changes and New Features
+--------------------------
+
+- No new feature added
+- Improved documentations with streamlined front page and updated links
+- Added docstrings for `+` and `+=` operators
+- Updated references for CytofDR paper publication in Nature Communications
+
+-------------------
+
+********
 v0.1.0
 ********
 
@@ -34,6 +58,7 @@ Deprecations
 
 - Permanently remove ``FileIO.make_dir`` function for safety reasons
 
+----------------------
 
 ********
 v0.0.1
