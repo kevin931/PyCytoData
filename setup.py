@@ -72,7 +72,7 @@ class CondaCommand(distutils.cmd.Command):
     
     
     def run(self):
-        self.move_assets("./PyCytoData/data/", "./temp_assets/", [], True)
+        self.move_assets("./PyCytoData/data/", "../temp_assets/", [], True)
         shutil.rmtree("./PyCytoData/data/")
         try:
             shutil.rmtree("dist_conda/")
@@ -81,8 +81,8 @@ class CondaCommand(distutils.cmd.Command):
         os.system("conda build . --output-folder dist_conda/ -c bioconda")
         os.system("anaconda upload ./dist_conda/noarch/pycytodata-{}-py_0.tar.bz2".format(VERSION))
         
-        self.move_assets("./temp_assets/", "./PyCytoData/data/", [], False)
-        shutil.rmtree("./temp_assets/")
+        self.move_assets("../temp_assets/", "./PyCytoData/data/", [], True)
+        shutil.rmtree("../temp_assets/")
 
 
 setuptools.setup(
