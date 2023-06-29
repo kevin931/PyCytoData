@@ -1207,6 +1207,7 @@ class FileIO():
         :type dtype: type, optional
 
         :raises TypeError: The ``files`` is neither a string nor a list of strings.
+        :raises ValueError: The expression matrices' channels are mismatched or misaligned.
         :return: A PyCytoData object.
         :rtype: PyCytoData
         """
@@ -1228,6 +1229,19 @@ class FileIO():
             colnames = np.loadtxt(fname=files[0], dtype ="str", max_rows=1, delimiter=delim)
             if drop_columns is not None:
                 colnames = np.delete(colnames, drop_columns)
+                
+            # Check whether channels are aligned properly
+            if len(files) > 1:
+                f: int
+                for f in range(1, len(files)):
+                    temp_colnames: np.ndarray = np.loadtxt(fname=files[f], dtype ="str", max_rows=1, delimiter=delim)
+                    if drop_columns is not None:
+                        temp_colnames = np.delete(temp_colnames, drop_columns)
+                    if not np.all(temp_colnames == colnames):
+                        msg: str = f"The channels of expression matrices the first and {f+1}-th are not the same. "
+                        msg += "Please ensure expression matrices' channels are in the same order with the same channels."
+                        raise ValueError(msg)
+                    
         else:
             colnames = np.full(data.n_channels, None)
 

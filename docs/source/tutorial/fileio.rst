@@ -211,8 +211,8 @@ Load Multiple Datasets at Once
 ------------------------------------
 
 If you have multiple samples in the same format (i.e. The columns are in the same
-configuration), you can load multiple samples at once into one single ``PyCytoData``
-object: 
+configuration after accounting for dropped columns as seen in the next section),
+you can load multiple samples at once into one single ``PyCytoData`` object: 
 
 .. code-block:: python
 
@@ -221,6 +221,9 @@ object:
     2
 
 All samples will be stored in a single object, but sample indices will be preserved.
+In the cases that channels are misaligned or mismatched, preprocessing on the users'
+side is needed to ensure that they are the same. Otherwise, a `ValueError` will be
+thrown. 
 
 Specifying Columns
 -------------------
