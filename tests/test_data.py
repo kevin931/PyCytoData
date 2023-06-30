@@ -897,6 +897,12 @@ class TestFileIO():
             tsv_writer.writerow([7, 8, 9])
             tsv_writer.writerow([10, 11, 12])
             
+        with open("./tmp_pytest/file_read_test_csv3.txt", "w") as f:
+            tsv_writer: "_csv._writer" = csv.writer(f, delimiter=",")
+            tsv_writer.writerow(["col3", "col2", "col1"])
+            tsv_writer.writerow([7, 8, 9])
+            tsv_writer.writerow([10, 11, 12])
+            
         with open("./tmp_pytest/file_read_test_tsv.txt", "w") as f:
             tsv_writer: "_csv._writer" = csv.writer(f, delimiter="\t")
             tsv_writer.writerow([1.1, 2.2, 3.3])
@@ -928,7 +934,26 @@ class TestFileIO():
         assert out_file.n_cells == 4
         assert out_file.n_channels == 3
         assert np.all(np.isin([0, 1], out_file.sample_index))
+        
+        
+    def test_laod_expression_mismatch_error(self):
+        try:
+            out_file: PyCytoData = FileIO.load_expression(["./tmp_pytest/file_read_test_csv2.txt", "./tmp_pytest/file_read_test_csv3.txt"],
+                                                          col_names=True, delim=",", dtype = int)
+        except ValueError as e:
+            msg: str = "The channels of expression matrices the first and 2-th are not the same. "
+            msg += "Please ensure expression matrices' channels are in the same order with the same channels."
+            assert msg in str(e)
+        else:
+            assert False
             
+            
+    def test_laod_expression_mismatch_drop(self):
+        out_file: PyCytoData = FileIO.load_expression(["./tmp_pytest/file_read_test_csv2.txt", "./tmp_pytest/file_read_test_csv3.txt"],
+                                                      col_names=True, delim=",", dtype = int, drop_columns=[0,2])
+        assert out_file.n_channels == 1
+        assert out_file.n_cells == 4
+    
     
     @pytest.mark.parametrize("drop_cols,expected_shape",
             [([0, 1], (2, 1)), (1, (2,2))]
