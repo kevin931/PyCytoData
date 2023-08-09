@@ -928,7 +928,7 @@ class DataLoader():
             metadata = cls._data_path[dataset] + "Samusik_cell_types.txt"
             data = cls._preprocess_samusik(fcs, metadata)
         else:
-            raise ValueError()
+            raise ValueError("Unsupported dataset: Have to be 'levine13', 'levine32', or 'samusik'.")
             
         return data
     
