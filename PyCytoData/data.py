@@ -934,7 +934,7 @@ class DataLoader():
     
     
     @classmethod
-    def _preprocess_levine13(cls, fcs: str, metadata: str) -> PyCytoData: #pragma: no cover
+    def _preprocess_levine13(cls, fcs: str, metadata: str) -> PyCytoData:
         df: pd.DataFrame
         _, df = fcsparser.parse(fcs, reformat_meta=True)
         labels: np.ndarray = np.loadtxt(metadata, delimiter="\t", dtype=str)
@@ -950,7 +950,7 @@ class DataLoader():
     
     
     @classmethod
-    def _preprocess_levine32(cls, fcs: str, metadata: str) -> PyCytoData: #pragma: no cover
+    def _preprocess_levine32(cls, fcs: str, metadata: str) -> PyCytoData:
         df: pd.DataFrame
         _, df = fcsparser.parse(fcs, reformat_meta=True)
         labels: np.ndarray = np.loadtxt(metadata, delimiter="\t", dtype=str)
@@ -976,7 +976,7 @@ class DataLoader():
     
     
     @classmethod
-    def _preprocess_samusik(cls, fcs: str, metadata: str) -> PyCytoData: #pragma: no cover
+    def _preprocess_samusik(cls, fcs: str, metadata: str) -> PyCytoData:
         
         df: pd.DataFrame
         _, df = fcsparser.parse(fcs, reformat_meta=True)
