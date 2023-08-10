@@ -1,5 +1,6 @@
 from PyCytoData import FileIO, PyCytoData, DataLoader, exceptions
 import numpy as np
+import pandas as pd
 
 import pytest
 import os
@@ -685,32 +686,36 @@ class TestDataLoader():
         os.makedirs("./tmp_pytest/data/levine32")
         os.makedirs("./tmp_pytest/data/samusik")
         
-        cls.n_channels: Dict[str, int] = {"levine13": 13, "levine32": 40, "samusik": 50}
-            
         for dataset in ["levine13", "levine32", "samusik"]:
-            exprs_path_01: str = "./tmp_pytest/data/"+ dataset + "/" + dataset +"_01.txt"
-            types_path_01: str = "./tmp_pytest/data/"+ dataset + "/" + dataset +"_metadata_01.txt"
-            exprs_path_02: str = "./tmp_pytest/data/"+ dataset + "/" + dataset +"_02.txt"
-            types_path_02: str = "./tmp_pytest/data/"+ dataset + "/" + dataset +"_metadata_02.txt"
-            
-            channels: np.ndarray = np.arange(cls.n_channels[dataset]).astype(str)
-            
+            path: str
             if dataset == "levine13":
-                levine13: np.ndarray = np.random.rand(2, cls.n_channels[dataset])
-                levine13[0,0] = 4.4
-                print(levine13)
-                FileIO.save_np_array(levine13, exprs_path_01, channels)
+                path: str = "./tmp_pytest/data/"+ dataset + "/" + "Levine_13dim" + "_cell_types.txt"
+                cell_types: np.ndarray = np.array([[1, "TypeA"], [2, "TypeB"]])
+                FileIO.save_np_array(cell_types, path, dtype = "%s",
+                                     col_names=np.array(["label", "population"]))
+            elif dataset == "levine32":
+                path: str = "./tmp_pytest/data/"+ dataset + "/" + "Levine_32dim" + "_cell_types.txt"
+                cell_types: np.ndarray = np.array([[1, "TypeA"], [2, "TypeB"]])
+                FileIO.save_np_array(cell_types, path, dtype = "%s",
+                                     col_names=np.array(["label", "population"]))
             else:
-                FileIO.save_np_array(np.random.rand(2, cls.n_channels[dataset]), exprs_path_01, channels)
+                path: str = "./tmp_pytest/data/"+ dataset + "/" + "Samusik" + "_cell_types.txt"
+                cell_types: np.ndarray = np.array(["TypeA", "TypeB"])
+                FileIO.save_np_array(cell_types, path, dtype = "%s")
                 
-            FileIO.save_np_array(np.random.rand(2, cls.n_channels[dataset]), exprs_path_02, channels)
-            FileIO.save_np_array(np.array([["B", "01"],["A", "01"]]), types_path_01, dtype="%s")
-            FileIO.save_np_array(np.array([["B", "02"],["A", "02"]]), types_path_02, dtype="%s")
-        
         
     def test_load_dataset_value_error(self):        
         try:
             DataLoader.load_dataset(dataset="levine14")
+        except ValueError as e:
+            assert "Unsupported dataset: Have to be 'levine13', 'levine32', or 'samusik'." in str(e)
+        else:
+            assert False
+            
+            
+    def test_preprocess_value_eror(self):
+        try:
+            DataLoader._preprocess(dataset="levine14")
         except ValueError as e:
             assert "Unsupported dataset: Have to be 'levine13', 'levine32', or 'samusik'." in str(e)
         else:
@@ -722,56 +727,99 @@ class TestDataLoader():
                               "levine32","samusik"]
                              )   
     def test_preprocess(self, mocker, dataset: Literal["levine13", "levine32", "samusik"]):
-        fcss: List[str] = ["a_a_a_01_a.fcs", "a_a_a_02_a.fcs"]
         preprocess_mock = mocker.MagicMock()
-        mocker.patch("PyCytoData.data.glob.glob", return_value=fcss)
         mocker.patch("PyCytoData.DataLoader._preprocess_"+dataset, preprocess_mock)
         DataLoader._preprocess(dataset=dataset)
         
         assert preprocess_mock.called
         
-    
-    @pytest.mark.parametrize("dataset",
-                            ["levine13", "levine32", "samusik"])     
-    def test_load_dataset(self, mocker, dataset: Literal["levine13", "levine32", "samusik"]):
-        mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
-        mocker.patch("PyCytoData.DataLoader._data_path", {"levine13": "./tmp_pytest/data/" + "levine13/",
-                                                          "levine32": "./tmp_pytest/data/" + "levine32/",
-                                                          "samusik": "./tmp_pytest/data/" + "samusik/"})
         
-        data: PyCytoData = DataLoader.load_dataset(dataset=dataset)
+    def test_preprocess_levine13(self, mocker):
+        df = pd.DataFrame({"label": [1, 2, np.nan],
+                           "CD1": [1.5, 1.5, 1.5],
+                           "CD2": [2.5, 3.5, 4.5]})
+        df = ("", df)
+        mocker.patch("PyCytoData.data.fcsparser.parse", return_value = df)
+        data: PyCytoData = DataLoader._preprocess_levine13(fcs = "",
+                                                           metadata = "./tmp_pytest/data/levine13/Levine_13dim_cell_types.txt")
         assert isinstance(data, PyCytoData)
-        assert None not in data.cell_types
-        assert None not in data.sample_index
-        assert data.n_cells == 4
-        assert data.n_channels == self.n_channels[dataset]
+        assert np.all(np.equal(np.array(["TypeA", "TypeB", "unassigned"]), data.cell_types))
         
         
-    def test_load_dataset_preprocess(self, mocker):
-        mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
-        mocker.patch("PyCytoData.DataLoader._data_path", {"levine13": "./tmp_pytest/data/" + "levine13/",
-                                                          "levine32": "./tmp_pytest/data/" + "levine32/",
-                                                          "samusik": "./tmp_pytest/data/" + "samusik/"})
+    def test_preprocess_levine32(self, mocker):
+        df = pd.DataFrame({'Time': [1.5, 1.5, 1.5],
+                           'Cell_length': [1.5, 1.5, 1.5],
+                           'DNA1(Ir191)Di': [1.5, 1.5, 1.5],
+                           'DNA2(Ir193)Di': [1.5, 1.5, 1.5],
+                           'CD45RA(La139)Di': [1.5, 1.5, 1.5],
+                           'CD133(Pr141)Di': [1.5, 1.5, 1.5],
+                           'CD19(Nd142)Di': [1.5, 1.5, 1.5],
+                           'CD22(Nd143)Di': [1.5, 1.5, 1.5],
+                           'CD11b(Nd144)Di': [1.5, 1.5, 1.5],
+                           'CD4(Nd145)Di': [1.5, 1.5, 1.5],
+                           'CD8(Nd146)Di': [1.5, 1.5, 1.5],
+                           'CD34(Nd148)Di': [1.5, 1.5, 1.5],
+                           'Flt3(Nd150)Di': [1.5, 1.5, 1.5],
+                           'CD20(Sm147)Di': [1.5, 1.5, 1.5],
+                           'CXCR4(Sm149)Di': [1.5, 1.5, 1.5],
+                           'CD235ab(Sm152)Di': [1.5, 1.5, 1.5],
+                           'CD45(Sm154)Di': [1.5, 1.5, 1.5],
+                           'CD123(Eu151)Di': [1.5, 1.5, 1.5],
+                           'CD321(Eu153)Di': [1.5, 1.5, 1.5],
+                           'CD14(Gd156)Di': [1.5, 1.5, 1.5],
+                           'CD33(Gd158)Di': [1.5, 1.5, 1.5],
+                           'CD47(Gd160)Di': [1.5, 1.5, 1.5],
+                           'CD11c(Tb159)Di': [1.5, 1.5, 1.5],
+                           'CD7(Dy162)Di': [1.5, 1.5, 1.5],
+                           'CD15(Dy164)Di': [1.5, 1.5, 1.5],
+                           'CD16(Ho165)Di': [1.5, 1.5, 1.5],
+                           'CD44(Er166)Di': [1.5, 1.5, 1.5],
+                           'CD38(Er167)Di': [1.5, 1.5, 1.5],
+                           'CD13(Er168)Di': [1.5, 1.5, 1.5],
+                           'CD3(Er170)Di': [1.5, 1.5, 1.5],
+                           'CD61(Tm169)Di': [1.5, 1.5, 1.5],
+                           'CD117(Yb171)Di': [1.5, 1.5, 1.5],
+                           'CD49d(Yb172)Di': [1.5, 1.5, 1.5],
+                           'HLA-DR(Yb174)Di': [1.5, 1.5, 1.5],
+                           'CD64(Yb176)Di': [1.5, 1.5, 1.5],
+                           'CD41(Lu175)Di': [1.5, 1.5, 1.5],
+                           'Viability(Pt195)Di': [1.5, 1.5, 1.5],
+                           'file_number': [1.5, 1.5, 1.5],
+                           'event_number': [1.5, 1.5, 1.5],
+                           "label": [1, 2, np.nan],
+                           "individual": [1, 2, 1]})
+        df = ("", df)
+        mocker.patch("PyCytoData.data.fcsparser.parse", return_value = df)
+        data: PyCytoData = DataLoader._preprocess_levine32(fcs = "",
+                                                           metadata = "./tmp_pytest/data/levine32/Levine_32dim_cell_types.txt")
+        channels: np.ndarray = np.array(['Time', 'Cell_length', 'DNA1(Ir191)Di', 'DNA2(Ir193)Di', 'CD45RA(La139)Di',
+                                         'CD133(Pr141)Di', 'CD19(Nd142)Di', 'CD22(Nd143)Di', 'CD11b(Nd144)Di',
+                                         'CD4(Nd145)Di', 'CD8(Nd146)Di', 'CD34(Nd148)Di', 'Flt3(Nd150)Di', 'CD20(Sm147)Di',
+                                         'CXCR4(Sm149)Di', 'CD235ab(Sm152)Di', 'CD45(Sm154)Di', 'CD123(Eu151)Di',
+                                         'CD321(Eu153)Di', 'CD14(Gd156)Di', 'CD33(Gd158)Di', 'CD47(Gd160)Di', 'CD11c(Tb159)Di',
+                                         'CD7(Dy162)Di', 'CD15(Dy164)Di', 'CD16(Ho165)Di', 'CD44(Er166)Di', 'CD38(Er167)Di',
+                                         'CD13(Er168)Di', 'CD3(Er170)Di', 'CD61(Tm169)Di', 'CD117(Yb171)Di', 'CD49d(Yb172)Di',
+                                         'HLA-DR(Yb174)Di', 'CD64(Yb176)Di', 'CD41(Lu175)Di', 'Viability(Pt195)Di', 'file_number', 'event_number'])
         
-        data: PyCytoData = DataLoader.load_dataset(dataset="levine13", preprocess=True)
         assert isinstance(data, PyCytoData)
-        assert np.isclose(data.expression_matrix[0,0], np.arcsinh(4.4/5))
-       
+        assert np.all(np.array(["TypeA", "TypeB", "unassigned"]) == data.cell_types)
+        assert np.all(np.array(["AML08", "AML09", "AML08"]) == data.sample_index)
+        assert np.all(channels == data.channels)
         
-    def test_load_dataset_no_cell_types(self, mocker): 
-        os.remove("./tmp_pytest/data/levine13/levine13_metadata_01.txt")
-        os.remove("./tmp_pytest/data/levine13/levine13_metadata_02.txt")
-        os.remove("./tmp_pytest/data/levine13/levine13_01.txt")
-        mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
-        mocker.patch("PyCytoData.DataLoader._data_path", {"levine13": "./tmp_pytest/data/" + "levine13/",
-                                                          "levine32": "./tmp_pytest/data/" + "levine32/",
-                                                          "samusik": "./tmp_pytest/data/" + "samusik/"})
         
-        data: PyCytoData = DataLoader.load_dataset(dataset="levine13")
+    def test_preprocess_samusik(self, mocker):
+        df = pd.DataFrame({"label": [1, 2, np.nan],
+                           "sample": [1.0, 2.0, 10],
+                           "event": [1, 1, 1],
+                           "CD1": [1.5, 1.5, 1.5],
+                           "CD2": [2.5, 3.5, 4.5]})
+        df = ("", df)
+        mocker.patch("PyCytoData.data.fcsparser.parse", return_value = df)
+        data: PyCytoData = DataLoader._preprocess_samusik(fcs = "",
+                                                          metadata = "./tmp_pytest/data/samusik/Samusik_cell_types.txt")
         assert isinstance(data, PyCytoData)
-        assert None in data.cell_types
-        assert data.n_cells == 2
-        assert data.n_channels == self.n_channels["levine13"]
+        assert np.all(np.equal(np.array(["TypeA", "TypeB", "unassigned"]), data.cell_types))
+        assert np.all(data.sample_index == np.array(["01", "02", "10"]))
         
         
     def test_load_dataset_sample_subset(self, mocker):
@@ -780,55 +828,28 @@ class TestDataLoader():
                                                           "levine32": "./tmp_pytest/data/" + "levine32/",
                                                           "samusik": "./tmp_pytest/data/" + "samusik/"})
         
-        data: PyCytoData = DataLoader.load_dataset(dataset="levine32", sample="01")
+        df: PyCytoData = PyCytoData(expression_matrix=np.array([[0.2, 1], [1, 0.2], [2, 1.1]]),
+                                    sample_index=["A", "B", "A"])
+        mocker.patch("PyCytoData.DataLoader._preprocess", return_value = df)
+
+        data: PyCytoData = DataLoader.load_dataset(dataset="levine32", sample="A")
         assert isinstance(data, PyCytoData)
         assert data.n_cells == 2
-        assert data.n_channels == self.n_channels["levine32"]
         
         
-    @pytest.mark.parametrize("force_download",
-                            [True, False]
-                            )   
-    def test_load_dataset_download_dataset(self, mocker, force_download: bool):         
+    def test_load_dataset_preprocess(self, mocker):
         mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
         mocker.patch("PyCytoData.DataLoader._data_path", {"levine13": "./tmp_pytest/data/" + "levine13/",
                                                           "levine32": "./tmp_pytest/data/" + "levine32/",
                                                           "samusik": "./tmp_pytest/data/" + "samusik/"})
-        mocker.patch("os.path.exists", return_value=False)
         
-        mock_download: mocker.MagicMock = mocker.MagicMock()
-        mocker.patch("PyCytoData.DataLoader._download_data", mock_download)
-        
-        try:
-            DataLoader.load_dataset(dataset="levine32", force_download=force_download)
-        except OSError:
-            mock_download.assert_called_with(dataset="levine32", force_download=force_download)
-        
-    @pytest.mark.parametrize("dataset,sample", [("levine13", None),
-                                                ("levine32", "test01"),
-                                                ("samusik", "test01")])
-    def test_preprocess_save_datasets(self, mocker, dataset, sample):
-        mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
-        mocker.patch("PyCytoData.DataLoader._data_path", {"levine13": "./tmp_pytest/data/" + "levine13/",
-                                                          "levine32": "./tmp_pytest/data/" + "levine32/",
-                                                          "samusik": "./tmp_pytest/data/" + "samusik/"})
-        # mocker.patch("PyCytoData.DataLoader._data_status", {dataset: True})
-        
-        data: PyCytoData = PyCytoData(expression_matrix=np.random.rand(10,2),
-                                      cell_types=np.repeat(["TypeA", "TypeB"], 5),
-                                      sample_index=np.repeat("test01", 10))
-        
-        DataLoader._preprocess_save_datasets(data, dataset, sample)
-        if sample is None:
-            data_path: str = "./tmp_pytest/data/" + dataset + "/" + dataset + ".txt"
-            metadata_path: str = "./tmp_pytest/data/" + dataset + "/" + dataset + "_metadata.txt"
-        else:
-            data_path: str = "./tmp_pytest/data/" + dataset + "/" + dataset + "_test01.txt"
-            metadata_path: str = "./tmp_pytest/data/" + dataset + "/" + dataset + "_metadata_test01.txt"
-        
-        assert os.path.exists(data_path)
-        assert os.path.exists(metadata_path)
+        df: PyCytoData = PyCytoData(expression_matrix=np.array([[0.2, 1], [1, 0.2], [2, 1.1]]))
+        mocker.patch("PyCytoData.DataLoader._preprocess", return_value = df)
 
+        data: PyCytoData = DataLoader.load_dataset(dataset="levine32", preprocess=True)
+        assert isinstance(data, PyCytoData)
+        assert data.expression_matrix[0,0] == np.arcsinh(0.2/5)
+        
             
     @pytest.mark.parametrize("input_value",
                              ["n", "N"]
@@ -864,15 +885,30 @@ class TestDataLoader():
         mocker.patch("PyCytoData.data.urlopen", return_value = contents_mock)
         mocker.patch("PyCytoData.data.ZipFile", return_value = zip_mock)
         mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
-        preprocess_mock: mocker.MagicMock = mocker.MagicMock()
-        mocker.patch("PyCytoData.DataLoader._preprocess", preprocess_mock)
         out: int = DataLoader._download_data(dataset="levine13", force_download=force_download)
         
-        preprocess_mock.assert_called()
         zip_mock.extractall.assert_called_once()
         contents_mock.read.assert_called_once()
         assert out == 0
-    
+        
+        
+    def test_load_dataset_download(self, mocker):
+        mocker.patch("PyCytoData.DataLoader._data_dir", "./tmp_pytest/data/")
+        mocker.patch("PyCytoData.DataLoader._data_path", {"levine13": "./tmp_pytest/data/" + "levine13/",
+                                                          "levine32": "./tmp_pytest/data/" + "levine32/",
+                                                          "samusik": "./tmp_pytest/data/" + "samusik/"})
+        
+        df: PyCytoData = PyCytoData(expression_matrix=np.array([[0.2, 1], [1, 0.2], [2, 1.1]]),
+                                    sample_index=["A", "B", "A"])
+        mocker.patch("PyCytoData.DataLoader._preprocess", return_value = df)
+        download_mock = mocker.MagicMock()
+        mocker.patch("PyCytoData.DataLoader._download_data", download_mock)
+        
+        shutil.rmtree("./tmp_pytest/data/levine32/")
+
+        data: PyCytoData = DataLoader.load_dataset(dataset="levine32")
+        download_mock.assert_called_once()
+        
     
     @classmethod
     def teardown_class(cls):

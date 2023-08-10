@@ -763,6 +763,7 @@ class PyCytoData():
             raise TypeError(f"'n_cell_types' has to be 'int' instead of {type(n_cell_types)}")
         self._n_cell_types = n_cell_types
         
+        
     @property
     def lineage_channels(self) -> Optional[np.ndarray]:
         """Getter for lineage_channels.
@@ -861,44 +862,14 @@ class DataLoader():
             raise ValueError("Unsupported dataset: Have to be 'levine13', 'levine32', or 'samusik'.")
                 
         if not os.path.exists(cls._data_path[dataset]):
-            cls._download_data(dataset = dataset, force_download = force_download)
+            cls._download_data(dataset = dataset, force_download = force_download)   
             
+        data: PyCytoData = cls._preprocess(dataset)
+        
         if sample is not None and not isinstance(sample, np.ndarray):
             sample = np.array(sample).flatten()
-            
-        all_files = glob.glob(cls._data_path[dataset]+dataset+"*.txt")
-        all_files = sorted(all_files)
-        files: List[str] = []
-        metadata_files: List[str] = []
-        for f in all_files:
-            if "metadata" in f:
-                metadata_files.append(f)
-            else:
-                files.append(f)
-
-        if sample is not None:
-            r = re.compile("(.*" + ".*)|(.*".join(sample) + ".*)")
-            files = list(filter(r.match, files))
-            metadata_files = list(filter(r.match, metadata_files))   
-            
-        data: PyCytoData = FileIO.load_expression(files=files, col_names = True)
-        metadata: Optional[np.ndarray] = None
-        for i, m in enumerate(metadata_files):
-            if i == 0:
-                metadata = np.loadtxt(fname=m, dtype ="str", delimiter="\t")
-            else:
-                assert metadata is not None
-                metadata = np.vstack((metadata, np.loadtxt(fname=m, dtype ="str", delimiter="\t")))
-        
-        if metadata is not None:
-            data.cell_types = metadata[:,0].flatten()
-            data.sample_index = metadata[:,1].flatten()
-            
-        if dataset == "levine32":
-            data.lineage_channels = data.channels[4:36]
-        if dataset == "samusik":
-            data.lineage_channels = data.channels[8:47]
-            
+            data.subset(sample = sample)
+                    
         if preprocess:
             data.preprocess(arcsinh=True, verbose=False)
             
@@ -909,12 +880,10 @@ class DataLoader():
     def _download_data(cls,
                       dataset: str,
                       force_download: bool=False) -> int:
-        
         """Method to download datasets."""
-        urls: Dict[str, List[str]] = {"levine13": ["http://imlspenticton.uzh.ch/robinson_lab/HDCytoData/Levine_13dim/Levine_13dim_fcs_files.zip"],
-                                       "levine32": ["http://imlspenticton.uzh.ch/robinson_lab/HDCytoData/Levine_32dim/Levine_32dim_fcs_files.zip"],
-                                       "samusik": ["http://imlspenticton.uzh.ch/robinson_lab/HDCytoData/Samusik/Samusik_fcs_files.zip",
-                                                   "http://imlspenticton.uzh.ch/robinson_lab/HDCytoData/Samusik/Samusik_population_IDs.zip"]}
+        urls: Dict[str, str] = {"levine13": "https://github.com/kevin931/PyCytoData/releases/download/datasets.rev.1/levine13.zip",
+                                "levine32": "https://github.com/kevin931/PyCytoData/releases/download/datasets.rev.1/levine32.zip",
+                                "samusik": "https://github.com/kevin931/PyCytoData/releases/download/datasets.rev.1/samusik.zip"}
 
         if not force_download:
             value = input(f"Would you like to download {dataset}? [y/n]")
@@ -922,7 +891,6 @@ class DataLoader():
             if value.lower() != "y":
                 message_1 = f"\nYou have declined to download {dataset}.\n"
                 print(message_1)
-
                 return 1
 
         # Download message
@@ -931,142 +899,101 @@ class DataLoader():
         message_2 += "go grab a coffee or cytomulate it!\n"
         print(message_2)
         
-        for url in urls[dataset]:
-            contents = urlopen(url)
-            contents = contents.read()
-            zip_file = ZipFile(BytesIO(contents))
-            zip_file.extractall(cls._data_path[dataset])
+        # Download
+        contents = urlopen(urls[dataset])
+        contents = contents.read()
+        zip_file = ZipFile(BytesIO(contents))
+        zip_file.extractall(cls._data_path[dataset])
         
-        cls._preprocess(dataset)
         return 0
     
     
     @classmethod
-    def _preprocess(cls, dataset: str):
-        
-        fcss: List[List[str]] = []
+    def _preprocess(cls, dataset: str) -> PyCytoData:
+        """Preprocess the Samusik dataset."""
+        fcs: str
+        metadata: str
+        data: PyCytoData
         
         if dataset == "levine13":
-            fcss.append(glob.glob(cls._data_path[dataset] + "*.fcs"))
-            cls._preprocess_levine13(fcss)
+            fcs = cls._data_path[dataset] + "Levine_13dim_notransform.fcs"
+            metadata = cls._data_path[dataset] + "Levine_13dim_cell_types.txt"
+            data = cls._preprocess_levine13(fcs, metadata)
         elif dataset == "levine32":
-            fcss.append(glob.glob(cls._data_path[dataset] + "*AML08*.fcs"))
-            fcss.append(glob.glob(cls._data_path[dataset] + "*AML09*.fcs"))
-            cls._preprocess_levine32(fcss)
+            fcs = cls._data_path[dataset] + "Levine_32dim_notransform.fcs"
+            metadata = cls._data_path[dataset] + "Levine_32dim_cell_types.txt"
+            data = cls._preprocess_levine32(fcs, metadata)
         elif dataset == "samusik":
-            for i in range(1, 11):
-                fcss.append(glob.glob(cls._data_path[dataset] + "*" + str(i).zfill(2)  + "*.fcs"))
-            cls._preprocess_samusik(fcss)
-    
-    
-    @classmethod
-    def _preprocess_levine13(cls, fcss: List[List[str]]): #pragma: no cover
-        exprs: Union[pd.DataFrame, np.ndarray] = pd.DataFrame()
-        meta: Dict[str, Any] = {}
-        sample_length = []
-        temp: pd.DataFrame
-        fcs: str
-        for fcs in fcss[0]:
-            meta, temp = fcsparser.parse(fcs, reformat_meta=True)
-            sample_length.append(len(temp))
-            exprs = pd.concat([exprs, temp])
-        
-        exprs= exprs.to_numpy() 
-        # Cell Types
-        fcs_cell_types: List[str] = [types.split("_")[-2] for types in fcss[0]]
-        cell_types: np.ndarray = np.array([])
-        for s in range(len(sample_length)):
-            cell_types = np.concatenate((cell_types, np.repeat(fcs_cell_types[s], sample_length[s])))
-        # channels
-        colnames: np.ndarray = meta['_channels_']["$PnN"].to_numpy()
-        # Construct data
-        data: PyCytoData = PyCytoData(exprs, colnames, cell_types)
-        cls._preprocess_save_datasets(data, "levine13")
-    
-    
-    @classmethod
-    def _preprocess_levine32(cls, fcss: List[List[str]]): #pragma: no cover
-        samples: List[str] = ["AML08", "AML09"]
-        for i, sam in enumerate(samples):
-            temp: pd.DataFrame
-            fcs: str
-            exprs: Union[pd.DataFrame, np.ndarray] = pd.DataFrame()
-            sample_length = []
-            for fcs in fcss[i]:
-                _, temp = fcsparser.parse(fcs, reformat_meta=True)
-                sample_length.append(len(temp))
-                exprs = pd.concat([exprs, temp])
-        
-            colnames: np.ndarray = np.array(exprs.columns)
-            exprs = exprs.to_numpy()
-            # Cell Types and Sample Index
-            fcs_cell_types: List[str] = [types.split("_")[-2] for types in fcss[i]]
-            cell_types: np.ndarray = np.array([])
-            sample_index: np.ndarray = np.array([])
-            sample_names: List[str] = [types.split("-")[3] for types in fcss[i]]
-            for s in range(len(sample_length)):
-                cell_types = np.concatenate((cell_types, np.repeat(fcs_cell_types[s], sample_length[s])))
-                sample_index = np.concatenate((sample_index, np.repeat(sample_names[s], sample_length[s])))
-            # Construct data
-            data: PyCytoData = PyCytoData(exprs, colnames, cell_types, sample_index)
-            cls._preprocess_save_datasets(data, "levine32", sam)
-    
-    
-    @classmethod
-    def _preprocess_samusik(cls, fcss: List[List[str]]): #pragma: no cover
-
-        # Metadata
-        meta_data: pd.DataFrame = pd.read_csv(cls._data_path["samusik"] + "population_assignments.txt", delimiter = "\t", header = None) #type: ignore
-        temp: pd.DataFrame = meta_data[0].str.split("_| ", expand = True) #type: ignore
-        meta_data = pd.concat([meta_data, temp], axis = 1) #type: ignore
-        meta_array: np.ndarray = meta_data.iloc[:,[1,5,8]].to_numpy() #type: ignore
-        
-        samples: List[str] = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10"]
-        for i, sam in enumerate(samples):
-            exprs: Union[pd.DataFrame, np.ndarray]
-            sample_length = []
-            _, exprs = fcsparser.parse(fcss[i][0], reformat_meta=True)
-            sample_length.append(len(temp))
-            
-            assert isinstance(exprs, pd.DataFrame)
-            colnames: np.ndarray = np.array(exprs.columns)
-            exprs = exprs.to_numpy()
-            # Sample Index
-            sample_index: np.ndarray = np.array([])
-            sample_names: str = fcss[i][0].split("_")[3]
-            sample_index = np.repeat(sample_names, exprs.shape[0])
-            # Cell Types
-            types: List[str] = ["unassigned"]*exprs.shape[0]
-            unique_sample: np.ndarray = np.unique(meta_array[:,1])
-            
-            subset: np.ndarray = meta_array[meta_array[:,1] == unique_sample[i]]
-            for j in range(len(subset)):
-                try:
-                    types[int(subset[j,2])] = subset[j, 0]
-                except TypeError: # paragma: no cover
-                    continue
-            
-            # Construct and save data
-            data: PyCytoData = PyCytoData(exprs, colnames, types, sample_index)
-            cls._preprocess_save_datasets(data, "samusik", sam)
-            
-            
-    @classmethod
-    def _preprocess_save_datasets(cls, data: PyCytoData, dataset: str, sample: Optional[str]=None):
-        
-        if sample is None:
-            path: str = cls._data_path[dataset] + dataset + ".txt"
-            metadata_path: str = cls._data_path[dataset] + dataset + "_metadata" + ".txt"
+            fcs = cls._data_path[dataset] + "Samusik_all_notransform.fcs"
+            metadata = cls._data_path[dataset] + "Samusik_cell_types.txt"
+            data = cls._preprocess_samusik(fcs, metadata)
         else:
-            path: str = cls._data_path[dataset] + dataset + "_" + sample + ".txt"
-            metadata_path: str = cls._data_path[dataset] + dataset + "_metadata_" + sample + ".txt"
+            raise ValueError("Unsupported dataset: Have to be 'levine13', 'levine32', or 'samusik'.")
+            
+        return data
+    
+    
+    @classmethod
+    def _preprocess_levine13(cls, fcs: str, metadata: str) -> PyCytoData:
+        """Preprocess the Levine13 dataset."""
+        df: pd.DataFrame
+        _, df = fcsparser.parse(fcs, reformat_meta=True)
+        labels: np.ndarray = np.loadtxt(metadata, delimiter="\t", dtype=str)
         
-        cell_types: np.ndarray = data.cell_types.reshape(data.n_cells, 1)
-        sample_index: np.ndarray = data.sample_index.reshape(data.n_cells, 1)
-        meta_data: np.ndarray = np.concatenate((cell_types, sample_index), axis=1)
+        labels = df["label"].apply(lambda x: "unassigned" if np.isnan(x) else labels[int(x),1]).to_numpy()
+        df = df.drop(["label"], axis = 1)
         
-        FileIO.save_np_array(data.expression_matrix, path, col_names = data.channels)
-        FileIO.save_np_array(meta_data, metadata_path, dtype="%s")
+        data: PyCytoData  = PyCytoData(expression_matrix=df.to_numpy(),
+                                       cell_types=labels,
+                                       channels=df.columns.to_numpy())
+        data.lineage_channels = data.channels
+        return data
+    
+    
+    @classmethod
+    def _preprocess_levine32(cls, fcs: str, metadata: str) -> PyCytoData:
+        """Preprocess the Levine32 dataset and use the old formatting."""
+        df: pd.DataFrame
+        _, df = fcsparser.parse(fcs, reformat_meta=True)
+        labels: np.ndarray = np.loadtxt(metadata, delimiter="\t", dtype=str)
+        
+        labels = df["label"].apply(lambda x: "unassigned" if np.isnan(x) else labels[int(x),1]).to_numpy()
+        samples: np.ndarray = df["individual"].apply(lambda x: "AML08" if x == 1 else "AML09").to_numpy() #type: ignore
+        df = df.drop(["individual", "label"], axis = 1)
+        channels: np.ndarray = np.array(['Time', 'Cell_length', 'DNA1(Ir191)Di', 'DNA2(Ir193)Di', 'CD45RA(La139)Di',
+                                         'CD133(Pr141)Di', 'CD19(Nd142)Di', 'CD22(Nd143)Di', 'CD11b(Nd144)Di',
+                                         'CD4(Nd145)Di', 'CD8(Nd146)Di', 'CD34(Nd148)Di', 'Flt3(Nd150)Di', 'CD20(Sm147)Di',
+                                         'CXCR4(Sm149)Di', 'CD235ab(Sm152)Di', 'CD45(Sm154)Di', 'CD123(Eu151)Di',
+                                         'CD321(Eu153)Di', 'CD14(Gd156)Di', 'CD33(Gd158)Di', 'CD47(Gd160)Di', 'CD11c(Tb159)Di',
+                                         'CD7(Dy162)Di', 'CD15(Dy164)Di', 'CD16(Ho165)Di', 'CD44(Er166)Di', 'CD38(Er167)Di',
+                                         'CD13(Er168)Di', 'CD3(Er170)Di', 'CD61(Tm169)Di', 'CD117(Yb171)Di', 'CD49d(Yb172)Di',
+                                         'HLA-DR(Yb174)Di', 'CD64(Yb176)Di', 'CD41(Lu175)Di', 'Viability(Pt195)Di', 'file_number', 'event_number'])
+        
+        data: PyCytoData  = PyCytoData(expression_matrix=df.to_numpy(),
+                                       cell_types=labels,
+                                       sample_index=samples,
+                                       channels=channels)
+        data.lineage_channels = data.channels[4:36]
+        return data
+    
+    
+    @classmethod
+    def _preprocess_samusik(cls, fcs: str, metadata: str) -> PyCytoData:
+        
+        df: pd.DataFrame
+        _, df = fcsparser.parse(fcs, reformat_meta=True)
+        labels: np.ndarray = np.loadtxt(metadata, delimiter="\t", dtype=str)
+        
+        labels = df["label"].apply(lambda x: "unassigned" if np.isnan(x) else labels[int(x)-1]).to_numpy()
+        samples: np.ndarray = df["sample"].apply(lambda x: str(int(x)) if x == 10 else f"0{str(int(x))}").to_numpy() #type: ignore
+        df = df.drop(["sample", "event", "label"], axis = 1)
+        
+        data: PyCytoData  = PyCytoData(expression_matrix=df.to_numpy(),
+                                       cell_types=labels,
+                                       sample_index=samples,
+                                       channels=df.columns.to_numpy())
+        data.lineage_channels = data.channels[8:47]
+        return data
 
 
 class FileIO():
