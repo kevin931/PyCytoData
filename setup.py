@@ -6,7 +6,7 @@ import distutils.cmd
 
 from typing import List
 
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 
 class PypiCommand(distutils.cmd.Command):
     
