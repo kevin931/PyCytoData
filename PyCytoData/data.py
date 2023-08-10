@@ -763,6 +763,7 @@ class PyCytoData():
             raise TypeError(f"'n_cell_types' has to be 'int' instead of {type(n_cell_types)}")
         self._n_cell_types = n_cell_types
         
+        
     @property
     def lineage_channels(self) -> Optional[np.ndarray]:
         """Getter for lineage_channels.
@@ -879,7 +880,6 @@ class DataLoader():
     def _download_data(cls,
                       dataset: str,
                       force_download: bool=False) -> int:
-        
         """Method to download datasets."""
         urls: Dict[str, str] = {"levine13": "https://github.com/kevin931/PyCytoData/releases/download/datasets.rev.1/levine13.zip",
                                 "levine32": "https://github.com/kevin931/PyCytoData/releases/download/datasets.rev.1/levine32.zip",
@@ -910,7 +910,7 @@ class DataLoader():
     
     @classmethod
     def _preprocess(cls, dataset: str) -> PyCytoData:
-        
+        """Preprocess the Samusik dataset."""
         fcs: str
         metadata: str
         data: PyCytoData
@@ -935,6 +935,7 @@ class DataLoader():
     
     @classmethod
     def _preprocess_levine13(cls, fcs: str, metadata: str) -> PyCytoData:
+        """Preprocess the Levine13 dataset."""
         df: pd.DataFrame
         _, df = fcsparser.parse(fcs, reformat_meta=True)
         labels: np.ndarray = np.loadtxt(metadata, delimiter="\t", dtype=str)
@@ -951,6 +952,7 @@ class DataLoader():
     
     @classmethod
     def _preprocess_levine32(cls, fcs: str, metadata: str) -> PyCytoData:
+        """Preprocess the Levine32 dataset and use the old formatting."""
         df: pd.DataFrame
         _, df = fcsparser.parse(fcs, reformat_meta=True)
         labels: np.ndarray = np.loadtxt(metadata, delimiter="\t", dtype=str)

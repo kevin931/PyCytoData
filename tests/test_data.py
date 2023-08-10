@@ -910,7 +910,6 @@ class TestDataLoader():
         download_mock.assert_called_once()
         
     
-    
     @classmethod
     def teardown_class(cls):
         shutil.rmtree("./tmp_pytest/")
