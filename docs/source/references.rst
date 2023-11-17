@@ -2,21 +2,25 @@
 References
 ################
 
-If you used ``PyCytoData`` as part of your research or used ``Cytomulate`` with this package, `our paper <https://doi.org/10.1101/2022.06.14.496200>`_
+If you used ``PyCytoData`` as part of your research or used ``Cytomulate`` with this package, `our paper <https://doi.org/10.1186/s13059-023-03099-1>`_
 can be cited here:
+
+.. code-block::
+
+	Yang, Y., Wang, K., Lu, Z. et al. Cytomulate: accurate and efficient simulation of CyTOF data. Genome Biol 24, 262 (2023). https://doi.org/10.1186/s13059-023-03099-1
+
+or
 
 .. code-block:: 
 
-	@article {Yang2022.06.14.496200,
+	@article {Yang2023,
 		author = {Yang, Yuqiu and Wang, Kaiwen and Lu, Zeyu and Wang, Tao and Wang, Xinlei},
-		title = {Cytomulate: Accurate and Efficient Simulation of CyTOF data},
-		elocation-id = {2022.06.14.496200},
-		year = {2022},
-		doi = {10.1101/2022.06.14.496200},
-		publisher = {Cold Spring Harbor Laboratory},
-		URL = {https://www.biorxiv.org/content/early/2022/06/16/2022.06.14.496200},
-		eprint = {https://www.biorxiv.org/content/early/2022/06/16/2022.06.14.496200.full.pdf},
-		journal = {bioRxiv}
+		title = {Cytomulate: accurate and efficient simulation of CyTOF data},
+		journal={Genome biology},
+		volume={24},
+		number={262},
+		year={2023},
+		publisher={Springer}
 	}
 
 
@@ -55,7 +59,7 @@ Benchmark Datasets
 ********************
 
 If you use the builtin datasets (``levine13``, ``levine32``, ``samusik``), you can cite the following papers
-along with ``HDCytoData``, which hosts these datasets.
+along with ``HDCytoData``, which serves as the inspiration for this package.
 
 - Weber, L. M., & Soneson, C. (2019). HDCytoData: collection of high-dimensional cytometry benchmark datasets in Bioconductor object formats. F1000Research, 8.
 - Levine et al. (2015). Data-Driven Phenotypic Dissection of AML Reveals Progenitor-like Cells that Correlate with Prognosis. Cell, 162, pp. 184-197. 

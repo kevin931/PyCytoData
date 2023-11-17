@@ -180,19 +180,23 @@ Update is strongly recommended.
 
 ## References
 
-If you used ``PyCytoData`` in your research or with ``Cytomulate`` as part of the pipeline, please cite [our paper](https://doi.org/10.1101/2022.06.14.496200) here:
+If you used ``PyCytoData`` in your research or with ``Cytomulate`` as part of the pipeline, please cite [our paper](https://doi.org/10.1186/s13059-023-03099-1) here:
 
 ```
-@article {Yang2022.06.14.496200,
+Yang, Y., Wang, K., Lu, Z. et al. Cytomulate: accurate and efficient simulation of CyTOF data. Genome Biol 24, 262 (2023). https://doi.org/10.1186/s13059-023-03099-1
+```
+
+or with our BibTex:
+
+```
+@article {Yang2023,
 	author = {Yang, Yuqiu and Wang, Kaiwen and Lu, Zeyu and Wang, Tao and Wang, Xinlei},
-	title = {Cytomulate: Accurate and Efficient Simulation of CyTOF data},
-	elocation-id = {2022.06.14.496200},
-	year = {2022},
-	doi = {10.1101/2022.06.14.496200},
-	publisher = {Cold Spring Harbor Laboratory},
-	URL = {https://www.biorxiv.org/content/early/2022/06/16/2022.06.14.496200},
-	eprint = {https://www.biorxiv.org/content/early/2022/06/16/2022.06.14.496200.full.pdf},
-	journal = {bioRxiv}
+	title = {Cytomulate: accurate and efficient simulation of CyTOF data},
+  journal={Genome biology},
+  volume={24},
+  number={262},
+  year={2023},
+  publisher={Springer}
 }
 ```
 
