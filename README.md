@@ -3,7 +3,7 @@
 # PyCytoData
 > An elegant data analysis tool for CyTOF.
 
-This package is an all-in-one CyTOF data analysis package for your experiments. From loading datasets to DR and evaluation, you have a consistent interface and readable code every step along the way. There is also support for some of ``HDCytoData``'s benchmark datasets as originally implemented in R by Weber & Soneson (2019) in [this repository](https://github.com/lmweber/HDCytoData). Why wait? Start your PyCytoData journal right here, right now! 
+This package is an all-in-one CyTOF data analysis package for your experiments. From loading datasets to DR and evaluation, you have a consistent interface and readable code every step along the way. There is also support for some of ``HDCytoData``'s benchmark datasets as originally implemented in R by Weber & Soneson (2019) in [this repository](https://github.com/lmweber/HDCytoData). Why wait? Start your PyCytoData journey right here, right now! 
 
 ## Installation
 
