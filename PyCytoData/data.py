@@ -190,6 +190,7 @@ class PyCytoData():
         3. Gate for intact cells.
         4. Gate for live cells.
         5. Gate for anomalies using center, offset, and residual channels. 
+        6. Bead normalization.
 
         :param gate_debris_removal: Whether to gate to remove debris, defaults to True.
         :type gate_debris_removal: bool
@@ -520,11 +521,11 @@ class PyCytoData():
         
         A few deviations from the numpy notations:
         
-        1. Integer indices are currently not supported. This is because indexing by integer
-            returns a 1-d array instead of a 2-d array, which can possibly cause confusion.
-        2. Indexing by two lists or arrays with different lengths are supported. They are
-            treated to index rows and columns, such as ``exprs[[0,1,2], [3,4]]`` is perfectly
-            valid to index the first 3 cells with the fourth and fifth channel.
+        1. Integer indices are currently not supported. This is because indexing by
+           integer returns a 1-d array instead of a 2-d array, which can possibly cause confusion.
+        2. Indexing by two lists or arrays with different lengths are supported.
+           They are treated to index rows and columns, such as ``exprs[[0,1,2], [3,4]]`` is
+           perfectly valid to index the first 3 cells with the fourth and fifth channel.
         
         .. tip::
         

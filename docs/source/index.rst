@@ -65,7 +65,7 @@ tutorials below! Enjoy your journey working with CyTOF datasets!
    :hidden:
 
    references
-   Our Paper (Cytomulate) <https://doi.org/10.1101/2022.06.14.496200>
+   Our Paper (Cytomulate) <https://doi.org/10.1186/s13059-023-03099-1>
    CyTOF DR Review (CytofDR) <https://doi.org/10.1038/s41467-023-37478-w>
    Dr. Xinlei (Shery) Wang <https://www.uta.edu/academics/faculty/profile?username=wangx9>
    Dr. Tao Wang <https://qbrc.swmed.edu/labs/wanglab/aboutpi.php>
@@ -80,7 +80,7 @@ Resources
 
 For more resources on our labs, collaborators, and related projects, please visit the following:
 
-   * `Our Paper (Cytomulate) <https://doi.org/10.1101/2022.06.14.496200>`_
+   * `Our Paper (Cytomulate) <https://doi.org/10.1186/s13059-023-03099-1>`_
    * `CyTOF DR Review Paper (CytofDR) <https://doi.org/10.1038/s41467-023-37478-w>`_
    * `Dr. Xinlei (Shery) Wang faculty page <https://www.uta.edu/academics/faculty/profile?username=wangx9>`_
    * `Dr. Tao Wang Lab <https://qbrc.swmed.edu/labs/wanglab/aboutpi.php>`_
