@@ -44,10 +44,31 @@ We try to make this package as lightweight as possible. Thus, as of now, we only
 
 - fcsparser
 - pandas
-- numpy
+- numpy >= 1.20
 
 ``fcsparser`` and ``pandas`` are used for handling benchmark datasets and their associated ``fcs`` files.
 We use ``numpy`` for all computations and preprocessing.
+
+
+Python Versions
+------------------
+
+We currently are tested on the following versions of Python:
+
+- 3.9
+- 3.10
+- 3.11
+- 3.12
+
+However, we try to make ``PyCytoData`` as widely supported as possible. In fact, we in theory support
+any Python version all the way back to `3.7`.
+
+.. note:: Newer Version of Python
+    We in theory should support newer versions of Python as well, such as Python `3.13`. However, one of the
+    optional dependencies `CytofDR` below depends on `numba`, which does not support `3.13`. Therefore, this
+    version does not currently pass our CI pipeline. If you do not plan on using `CytofDR`, feel free to use
+    the newest version of Python available.
+
 
 Optional Dependency
 --------------------
