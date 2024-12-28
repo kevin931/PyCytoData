@@ -24,8 +24,8 @@ class PypiCommand(distutils.cmd.Command):
     def run(self):
         shutil.rmtree("dist/")
         
-        wheel_file = "PyCytoData-{}-py3-none-any.whl".format(VERSION)
-        tar_file = "PyCytoData-{}.tar.gz".format(VERSION)
+        wheel_file = "pycytodata-{}-py3-none-any.whl".format(VERSION)
+        tar_file = "pycytodata-{}.tar.gz".format(VERSION)
         
         os.system("{} setup.py sdist bdist_wheel".format(sys.executable))
         os.system("twine upload dist/{} dist/{}".format(wheel_file, tar_file))
