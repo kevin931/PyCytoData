@@ -161,22 +161,22 @@ For detailed documentation along with tutorials and API Reference, please visit 
 
 If you prefer to build documentation on your own, refer to [this guide](https://pycytodata.readthedocs.io/en/latest/change/build.html) for more details.
 
-## Latest Release: 0.1.2
+## Latest Release: 0.1.3
 
-This is a minor release that fixes a critical bug that affects all previous releases.
-Update is strongly recommended.
+This is a minor release that fixes a critical bug that affects all previous releases. Update is strongly recommended. A few quality-of-life improvements are included as well.
 
 ### Bug Fixes
 
-- Fixed a critical issue with ``PyCytoData.load_dataset()`` not working due to old web source down ([#3](https://github.com/kevin931/PyCytoData/issues/3))
-    - This issue stems from upstream web source, thus affecting all previous releases.
-    - This update fixes the issue with a different implementation.
-    - There is no implementation change.
+- Fixed a critical issue with subsetting channels not updating internal indices lineage channels.
+- Fixed a verbiage error for subsetting error messages. Now, it is explicitly stated that integer indexing is not supported.
+- Updated documentation to fix typos.
 
 
 ### Changes and New Features
-
-- No new feature added.
+- Updated CI pipeline to include newest Python releases.
+- Added our logo usage policy.
+- Clarified the python version needed to run `PyCytoData`.
+- No new software feature added.
 
 ## References
 

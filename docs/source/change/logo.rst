@@ -2,7 +2,7 @@
 Logo Usage
 ========================
 
-../../assets/pycytodata.jpg
+.. image:: ../../assets/pycytodata.jpg
 
 
 We proudly share the `PyCytoData` logo with the community. In fact, in lieu of an MIT license
