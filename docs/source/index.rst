@@ -51,6 +51,7 @@ tutorials below! Enjoy your journey working with CyTOF datasets!
    change/build
    change/development
    change/index
+   change/logo.rst
    license
 
 .. toctree::
