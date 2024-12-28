@@ -359,7 +359,21 @@ class TestCytoData():
         assert exprs.n_channels == 2
         assert exprs.lineage_channels is not None
         assert exprs.lineage_channels.shape[0] == 2
+        assert np.all(np.equal(exprs._lineage_channels_indices, np.array([0, 1])))
         assert not np.isin("Channel0", exprs.lineage_channels)
+        
+        
+    def test_subset_channels_lineage_indices(self):
+        exprs_matrix: np.ndarray = np.random.rand(100, 10)
+        channels: np.ndarray = np.arange(10).astype(str)
+        exprs = PyCytoData(exprs_matrix, channels=channels)
+        exprs.subset(channels=["1", "2"])
+        assert exprs.n_cells == 100
+        assert exprs.n_channels == 2
+        assert exprs.lineage_channels is None
+        assert exprs._lineage_channels_indices.shape[0] == 2
+        assert np.all(np.equal(exprs._lineage_channels_indices, np.array([0, 1])))
+        assert not np.isin("0", exprs.lineage_channels)
             
             
     def test_subset_cell_types(self):

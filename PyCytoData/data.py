@@ -417,6 +417,8 @@ class PyCytoData():
         self.channels = self.channels[channel_filter_condition]
         if self.lineage_channels is not None:
             self.lineage_channels = self.lineage_channels[np.isin(self.lineage_channels, self.channels)]
+        else:
+            self._lineage_channels_indices = np.arange(self.n_channels)
         self.sample_index = self.sample_index[filter_condition]
         self.cell_types = self.cell_types[filter_condition]
         
@@ -786,6 +788,7 @@ class PyCytoData():
         if not np.all(np.isin(lineage_channels, self._channels)):
             raise ValueError("Some lineage channels are not listed in channel names.")
         self._lineage_channels: Optional[np.ndarray] = lineage_channels if lineage_channels is None else np.array(lineage_channels).flatten()
+        self._lineage_channels_indices = np.where(np.isin(self.lineage_channels, self.channels))
         
         
     @property
