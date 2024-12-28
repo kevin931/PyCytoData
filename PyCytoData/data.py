@@ -557,7 +557,7 @@ class PyCytoData():
             
         if (not isinstance(items, slice) and not isinstance(items, tuple) and
             not isinstance(items, list) and not isinstance(items, np.ndarray)):
-            raise TypeError("Invalid indices: Must be integer, slice, tuple, list, or numpy array.")
+            raise TypeError("Invalid indices: Must be slice, tuple, list, or numpy array.")
         
         out_object = deepcopy(self)
         if isinstance(items, tuple):
