@@ -546,10 +546,10 @@ class PyCytoData():
                 raise IndexError("Invalid indices: Must be 1 or 2 indices.")
             if (not isinstance(items[0], slice) and not isinstance(items[0], tuple) and
                 not isinstance(items[0], list) and not isinstance(items[0], np.ndarray)):
-                raise TypeError("Invalid indices: Must be integer, slice, tuple, list, or numpy array.")
+                raise TypeError("Invalid indices: Must be slice, tuple, list, or numpy array.")
             if (not isinstance(items[1], slice) and not isinstance(items[1], tuple) and
                 not isinstance(items[1], list) and not isinstance(items[1], np.ndarray)):
-                raise TypeError("Invalid indices: Must be integer, slice, tuple, list, or numpy array.")
+                raise TypeError("Invalid indices: Must be slice, tuple, list, or numpy array.")
             
         if isinstance(items, np.ndarray):
             if len(items.shape) != 1:

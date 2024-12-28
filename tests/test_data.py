@@ -638,7 +638,7 @@ class TestCytoData():
         try:
             exprs[1] #type: ignore
         except TypeError as e:
-            assert "Invalid indices: Must be integer, slice, tuple, list, or numpy array." in str(e)
+            assert "Invalid indices: Must be slice, tuple, list, or numpy array." in str(e)
         else:
             assert False
             
@@ -654,7 +654,7 @@ class TestCytoData():
         try:
             exprs[index1, index2]
         except TypeError as e:
-            assert "Invalid indices: Must be integer, slice, tuple, list, or numpy array." in str(e)
+            assert "Invalid indices: Must be slice, tuple, list, or numpy array." in str(e)
         else:
             assert False
             
