@@ -34,9 +34,9 @@ Samusik           ``samusik``
 =============== ==================
 
 As you may recognize, they are famous datasets that have been used numerous
-times in the past. In fact, we use the `HDCytoData <https://github.com/lmweber/HDCytoData>`_
-interface for downloading such data! To load these datasets, all you need to do
-is the following:
+times in the past (e.g. `HDCytoData <https://github.com/lmweber/HDCytoData>`_).
+We use a custom interface and pipeline for loading and processing these datasets.
+To load these datasets, all you need to do is the following:
 
 .. code-block:: python
 

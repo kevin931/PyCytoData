@@ -59,7 +59,7 @@ Benchmark Datasets
 ********************
 
 If you use the builtin datasets (``levine13``, ``levine32``, ``samusik``), you can cite the following papers
-along with ``HDCytoData``, which serves as the inspiration for this package.
+along with ``HDCytoData``, which serve as the inspiration for this package.
 
 - Weber, L. M., & Soneson, C. (2019). HDCytoData: collection of high-dimensional cytometry benchmark datasets in Bioconductor object formats. F1000Research, 8.
 - Levine et al. (2015). Data-Driven Phenotypic Dissection of AML Reveals Progenitor-like Cells that Correlate with Prognosis. Cell, 162, pp. 184-197. 

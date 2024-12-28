@@ -1,5 +1,5 @@
 {% set name = "PyCytoData" %}
-{% set version = "0.1.2" %}
+{% set version = "0.1.3" %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-  sha256: 54b6e8bb244653e9cf58efd2d7c11ae829f5de0b9cea569d27376d7e41e98829
+  sha256: 20f161d9822c69e36b7253a5170e270427340a613397b47e59a04f02020f1a53
 
 build:
   noarch: python

@@ -418,6 +418,8 @@ class PyCytoData():
         self.channels = self.channels[channel_filter_condition]
         if self.lineage_channels is not None:
             self.lineage_channels = self.lineage_channels[np.isin(self.lineage_channels, self.channels)]
+        else:
+            self._lineage_channels_indices = np.arange(self.n_channels)
         self.sample_index = self.sample_index[filter_condition]
         self.cell_types = self.cell_types[filter_condition]
         
@@ -545,10 +547,10 @@ class PyCytoData():
                 raise IndexError("Invalid indices: Must be 1 or 2 indices.")
             if (not isinstance(items[0], slice) and not isinstance(items[0], tuple) and
                 not isinstance(items[0], list) and not isinstance(items[0], np.ndarray)):
-                raise TypeError("Invalid indices: Must be integer, slice, tuple, list, or numpy array.")
+                raise TypeError("Invalid indices: Must be slice, tuple, list, or numpy array.")
             if (not isinstance(items[1], slice) and not isinstance(items[1], tuple) and
                 not isinstance(items[1], list) and not isinstance(items[1], np.ndarray)):
-                raise TypeError("Invalid indices: Must be integer, slice, tuple, list, or numpy array.")
+                raise TypeError("Invalid indices: Must be slice, tuple, list, or numpy array.")
             
         if isinstance(items, np.ndarray):
             if len(items.shape) != 1:
@@ -556,7 +558,7 @@ class PyCytoData():
             
         if (not isinstance(items, slice) and not isinstance(items, tuple) and
             not isinstance(items, list) and not isinstance(items, np.ndarray)):
-            raise TypeError("Invalid indices: Must be integer, slice, tuple, list, or numpy array.")
+            raise TypeError("Invalid indices: Must be slice, tuple, list, or numpy array.")
         
         out_object = deepcopy(self)
         if isinstance(items, tuple):
@@ -787,6 +789,7 @@ class PyCytoData():
         if not np.all(np.isin(lineage_channels, self._channels)):
             raise ValueError("Some lineage channels are not listed in channel names.")
         self._lineage_channels: Optional[np.ndarray] = lineage_channels if lineage_channels is None else np.array(lineage_channels).flatten()
+        self._lineage_channels_indices = np.where(np.isin(self.lineage_channels, self.channels))
         
         
     @property

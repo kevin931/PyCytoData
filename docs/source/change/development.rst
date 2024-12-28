@@ -16,15 +16,11 @@ Here are our milestones that we would like to achieve for our package!
 Major Milestones
 ------------------
 
-- Integration with Cytomulate
 - Support for more datasets
 - Command-line Interface
 
-Minor Milestones
--------------------
-
-- Magic methods for ``PyCytoData`` class
-- More attributes
+Please see our `GitHub issue tracker <https://github.com/kevin931/PyCytoData/issues>`_ for our
+latest feature requests and work in progress.
 
 ---------
 

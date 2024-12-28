@@ -51,6 +51,7 @@ tutorials below! Enjoy your journey working with CyTOF datasets!
    change/build
    change/development
    change/index
+   change/logo.rst
    license
 
 .. toctree::
@@ -67,7 +68,7 @@ tutorials below! Enjoy your journey working with CyTOF datasets!
    references
    Our Paper (Cytomulate) <https://doi.org/10.1186/s13059-023-03099-1>
    CyTOF DR Review (CytofDR) <https://doi.org/10.1038/s41467-023-37478-w>
-   Dr. Xinlei (Shery) Wang <https://www.uta.edu/academics/faculty/profile?username=wangx9>
+   Dr. Xinlei (Sherry) Wang <https://www.uta.edu/academics/faculty/profile?username=wangx9>
    Dr. Tao Wang <https://qbrc.swmed.edu/labs/wanglab/aboutpi.php>
    DBAI <https://dbai.biohpc.swmed.edu/>
    GitHub <https://github.com/kevin931/PyCytoData/>
