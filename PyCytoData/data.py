@@ -12,7 +12,7 @@ import fcsparser
 import _csv
 import csv
 import os
-import pkg_resources
+from importlib.resources import files as _resource_files
 import glob
 import re
 from copy import deepcopy
@@ -823,7 +823,7 @@ class DataLoader():
     """
 
     # Package data directory and Path
-    _data_dir = pkg_resources.resource_filename("PyCytoData", "data/")
+    _data_dir = str(_resource_files("PyCytoData").joinpath("data")) + "/"
     _data_path: Dict[str, str] = {"levine13": _data_dir + "levine13/",
                                   "levine32": _data_dir + "levine32/",
                                   "samusik": _data_dir + "samusik/"}
